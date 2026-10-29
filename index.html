@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Automated Solar – AI Installation Audit</title>
+<meta name="theme-color" content="#14202b">
+<style>
+:root{
+  --ink:#14202b; --ink-2:#2b3a48; --muted:#64707c; --bg:#f3f4f0; --card:#ffffff; --line:#e1e4dc; --line-2:#cfd4c9;
+  --sun:#f5a524; --sun-soft:#fff3dc; --sun-ink:#8a5300;
+  --ok:#1f8f4e; --ok-soft:#e5f5ec; --pnc:#b8860b; --pnc-soft:#fbf3dc;
+  --policy:#d9480f; --policy-soft:#fdebe2; --safety:#c92a2a; --safety-soft:#fbe5e5;
+  --ai:#5b4bdb; --ai-soft:#efedfd; --info:#1c6fb8; --info-soft:#e6f0fa;
+  --r:12px; --sh:0 1px 2px rgba(20,32,43,.06),0 4px 14px rgba(20,32,43,.05);
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--info)}
+.hidden{display:none!important}
+
+/* Header */
+header.top{position:sticky;top:0;z-index:40;background:var(--ink);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.top-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap;cursor:pointer}
+.brand small{display:block;font-weight:500;color:#9fb0bf;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
+nav.tabs{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+nav.tabs button{background:none;border:0;color:#c7d2dc;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
+nav.tabs button:hover{background:rgba(255,255,255,.08);color:#fff}
+nav.tabs button.on{background:var(--sun);color:var(--ink)}
+.conn{font-size:12px;color:#9fb0bf;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:#888;display:inline-block}
+.dot.ok{background:#3ccf7b}.dot.bad{background:#ff6b6b}
+
+main{max-width:1240px;margin:0 auto;padding:18px 16px 80px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:15px;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 16px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line-2);background:#fff;padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap;transition:background .12s,border-color .12s,transform .05s}
+.btn:hover{background:#f7f8f5;border-color:#b9c0b3}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.pri{background:var(--sun);border-color:var(--sun);color:var(--ink)}
+.btn.pri:hover{background:#ffb43d}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.dark:hover{background:var(--ink-2)}
+.btn.ai{background:var(--ai);border-color:var(--ai);color:#fff}
+.btn.ai:hover{background:#4a3bc9}
+.btn.ai-o{border-color:#cdc7f7;color:var(--ai);background:var(--ai-soft)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.danger{color:var(--safety);border-color:#efc4c4}
+.btn.sm{padding:5px 9px;font-size:13px;border-radius:7px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn svg{width:16px;height:16px;flex:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+
+/* Cards / stats */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.pad{padding:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.stat{padding:14px 16px}
+.stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.stat .v{font-size:28px;font-weight:700;margin-top:2px}
+.stat .h{font-size:12px;color:var(--muted)}
+.stat.accent{border-top:3px solid var(--sun)}
+.stat.aiacc{border-top:3px solid var(--ai)}
+.stat.warn{border-top:3px solid var(--pnc)}
+.stat.bad{border-top:3px solid var(--safety)}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters input,.filters select{padding:8px 10px;border:1px solid var(--line-2);border-radius:9px;background:#fff;min-width:0}
+.filters input{flex:1 1 220px}
+
+.jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.job{padding:14px;cursor:pointer;transition:border-color .12s,transform .1s}
+.job:hover{border-color:var(--sun)}
+.job .jn{font-family:var(--mono);font-weight:700;font-size:15px}
+.job .meta{color:var(--muted);font-size:13px}
+.mini-stages{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.mini-stages div{font-size:11px;color:var(--muted)}
+.bar{height:6px;background:#eceee8;border-radius:4px;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:4px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.o-pass{background:var(--ok-soft);color:var(--ok)}
+.o-pnc{background:var(--pnc-soft);color:#7d5b00}
+.o-policy{background:var(--policy-soft);color:var(--policy)}
+.o-safety{background:var(--safety-soft);color:var(--safety)}
+.o-none{background:#eef0ea;color:var(--muted)}
+.o-ai{background:var(--ai-soft);color:var(--ai)}
+.o-needs{background:var(--sun-soft);color:var(--sun-ink)}
+.o-info{background:var(--info-soft);color:var(--info)}
+
+.empty{text-align:center;color:var(--muted);padding:40px 16px}
+
+/* Job view */
+.jhead{padding:16px;margin-bottom:12px}
+.jhead .top-line{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.jhead .jn{font-family:var(--mono);font-size:22px;font-weight:800}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 16px;margin-top:10px;font-size:13px}
+.kv b{display:block;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.stage-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stage-tab{padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:#fff;cursor:pointer;text-align:left}
+.stage-tab.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.stage-tab .t{font-weight:700;display:flex;justify-content:space-between;gap:6px}
+.stage-tab .s{font-size:12px;color:var(--muted)}
+.stage-tab .cnt{font-size:12px;font-weight:700;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.sec-title{font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
+.sec-title:after{content:"";flex:1;height:1px;background:var(--line-2)}
+
+.q{padding:14px;margin-bottom:10px;border-left:4px solid var(--line-2)}
+.q.st-needs{border-left-color:var(--sun)}
+.q.st-ai{border-left-color:var(--ai)}
+.q.st-human{border-left-color:var(--ok)}
+.q.is-fail{background:linear-gradient(90deg,#fff7f6,#fff 40%)}
+.qtop{display:flex;gap:10px;align-items:flex-start}
+.qnum{flex:none;width:28px;height:28px;border-radius:8px;background:#eef0ea;font-weight:700;font-size:13px;display:grid;place-items:center}
+.qtext{flex:1;font-weight:600}
+.qtext small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.ans{display:flex;gap:6px;margin:10px 0 0 38px;flex-wrap:wrap}
+.ans button{min-width:64px;padding:7px 12px;border-radius:9px;border:1px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer}
+.ans button.on.v-Yes{background:var(--ok);border-color:var(--ok);color:#fff}
+.ans button.on.v-No{background:var(--safety);border-color:var(--safety);color:#fff}
+.ans button.on.v-NA{background:#6b7480;border-color:#6b7480;color:#fff}
+.ans select{padding:7px 10px;border:1px solid var(--line-2);border-radius:9px;background:#fff;font-weight:600}
+.qbody{margin-left:38px}
+.photos{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.thumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in;background:#eee}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ix{position:absolute;left:3px;top:3px;background:rgba(20,32,43,.75);color:#fff;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px}
+.add-ph{width:64px;height:64px;border:1.5px dashed var(--line-2);border-radius:8px;display:grid;place-items:center;color:var(--muted);cursor:pointer;background:#fafbf8}
+.add-ph:hover{border-color:var(--sun);color:var(--sun-ink)}
+.add-ph svg{width:22px;height:22px}
+
+.aip{margin-top:10px;border:1px solid #dcd7fb;background:linear-gradient(180deg,#f7f6ff,#fff);border-radius:10px;padding:10px 12px}
+.aip .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:700;color:var(--ai);font-size:13px}
+.aip .sum{margin:6px 0 4px}
+.aip ul{margin:4px 0 4px 18px;padding:0;font-size:13.5px}
+.aip li{margin:2px 0}
+.issue{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:8px;background:#fff;border:1px solid var(--line);margin:6px 0;font-size:13.5px}
+.issue .code{font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap}
+.conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.conf .bar{width:60px;margin:0}
+.conf .bar i{background:var(--ai)}
+.v-pass{background:var(--ok-soft);color:var(--ok)}
+.v-fail{background:var(--safety-soft);color:var(--safety)}
+.v-insufficient_evidence{background:var(--sun-soft);color:var(--sun-ink)}
+.v-not_applicable{background:#eef0ea;color:var(--muted)}
+
+.codes{margin-top:10px;border:1px solid #f0d2cd;background:#fffafa;border-radius:10px;padding:10px 12px}
+.codes h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--safety)}
+.code-opt{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:13.5px;cursor:pointer}
+.code-opt input{margin-top:3px;accent-color:var(--safety)}
+.code-opt .act{display:block;color:var(--muted);font-size:12.5px}
+.cat1{color:var(--safety)}.cat2{color:var(--policy)}.cat3{color:#8a6a00}.cat4{color:var(--info)}
+.code-opt select{max-width:100%}
+.guidance{margin-top:8px;font-size:13px;color:var(--sun-ink);background:var(--sun-soft);border-radius:8px;padding:7px 10px}
+.notes{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-height:38px;resize:vertical;background:#fcfcfa;font-size:14px}
+.qfoot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.spin{width:15px;height:15px;border:2px solid rgba(91,75,219,.25);border-top-color:var(--ai);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+.btn .spin{border-color:rgba(255,255,255,.35);border-top-color:#fff}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.outcome-box{padding:10px 14px;border-radius:10px;font-weight:700;display:flex;gap:10px;align-items:center}
+.save-ind{font-size:12px;color:var(--muted)}
+
+/* Forms */
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form .full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--ink-2)}
+label.f input,label.f select,label.f textarea{padding:9px 10px;border:1px solid var(--line-2);border-radius:9px;background:#fff;font-weight:400}
+label.f .hint{font-weight:400;color:var(--muted);font-size:12px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,22,30,.55);z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow-y:auto}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
+.modal.wide{max-width:1000px}
+.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.modal .mh h2{margin:0;font-size:17px}
+.modal .mb{padding:16px}
+.modal .mf{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.x{margin-left:auto;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+
+.drop{border:2px dashed var(--line-2);border-radius:12px;padding:28px 16px;text-align:center;color:var(--muted);background:#fafbf8;cursor:pointer}
+.drop.over{border-color:var(--sun);background:var(--sun-soft)}
+.prog{height:10px;background:#eceee8;border-radius:6px;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ai),#8b7ff0);width:0;transition:width .25s}
+.log{max-height:220px;overflow:auto;font-size:12.5px;font-family:var(--mono);background:#f7f8f5;border-radius:8px;padding:8px;margin-top:10px;white-space:pre-wrap}
+
+.lb-img{width:100%;max-height:62vh;object-fit:contain;background:#111;border-radius:10px;display:block}
+.tag{display:inline-flex;align-items:center;gap:4px;background:#eef0ea;border-radius:7px;padding:3px 4px 3px 8px;font-size:12.5px;margin:2px}
+.tag button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 4px}
+
+video.cam{width:100%;border-radius:10px;background:#000;max-height:60vh}
+
+/* Inspector */
+.ins-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:14px}
+.sev-safety{border-left:3px solid var(--safety)}.sev-policy{border-left:3px solid var(--policy)}.sev-minor{border-left:3px solid var(--pnc)}
+
+/* Report */
+.report{font-size:13.5px}
+.report table{width:100%;border-collapse:collapse;margin:8px 0 16px}
+.report th,.report td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left;vertical-align:top}
+.report th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.report .r-head{display:flex;justify-content:space-between;gap:16px;border-bottom:3px solid var(--sun);padding-bottom:10px;margin-bottom:12px}
+.report .ph-grid{display:flex;gap:6px;flex-wrap:wrap}
+.report .ph-grid img{width:110px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.ans-Yes{color:var(--ok);font-weight:700}.ans-No{color:var(--safety);font-weight:700}
+
+#toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:520px}
+.toast{background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:14px;pointer-events:auto}
+.toast.err{background:var(--safety)}.toast.ok{background:var(--ok)}
+.banner{padding:12px 14px;border-radius:10px;background:var(--safety-soft);color:var(--safety);margin-bottom:12px;font-weight:600}
+#printArea{display:none}
+
+@media (max-width:760px){
+  .top-in{flex-wrap:wrap;gap:8px}
+  nav.tabs{order:3;width:100%;margin-left:0}
+  .conn{margin-left:auto}
+  .form{grid-template-columns:1fr}
+  .stage-tabs{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .stage-tab{padding:8px}
+  .stage-tab .s{display:none}
+  .ans,.qbody{margin-left:0}
+  .ins-grid{grid-template-columns:1fr}
+  h1{font-size:20px}
+  .jhead .jn{font-size:18px}
+}
+@media print{
+  body.print-report > *:not(#printArea){display:none!important}
+  body.print-report #printArea{display:block!important}
+  body{background:#fff}
+  .report .ph-grid img{width:90px;height:90px}
+  .report tr{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand" data-act="nav" data-view="dashboard">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="24" cy="9" r="5" fill="#f5a524"/><g stroke="#f5a524" stroke-width="1.6" stroke-linecap="round"><path d="M24 1.5v1.8M31.5 9h-1.8M29.3 3.7l-1.3 1.3M18.7 3.7l1.3 1.3"/></g><path d="M3 30l5-14h20l-5 14z" fill="#2f6fae"/><path d="M8 16l-5 14M13 16l-3 14M18 16l-2 14M23 16l-1 14M5.5 23h20.5" stroke="#9cc3ea" stroke-width="1"/></svg>
+      <div>Automated Solar<small>AI installation audit</small></div>
+    </div>
+    <nav class="tabs">
+      <button data-act="nav" data-view="dashboard" id="nav-dashboard">Jobs</button>
+      <button data-act="nav" data-view="job" id="nav-job" class="hidden">Audit</button>
+      <button data-act="nav" data-view="inspector" id="nav-inspector">AI Inspector</button>
+      <button data-act="nav" data-view="settings" id="nav-settings">Settings</button>
+    </nav>
+    <div class="conn"><span class="dot" id="connDot"></span><span id="connTxt">Connecting…</span></div>
+  </div>
+</header>
+
+<main>
+  <section id="view-dashboard"></section>
+  <section id="view-job" class="hidden"></section>
+  <section id="view-inspector" class="hidden"></section>
+  <section id="view-settings" class="hidden"></section>
+</main>
+
+<input type="file" id="pickFiles" accept="image/*" multiple class="hidden">
+<input type="file" id="pickCamera" accept="image/*" capture="environment" class="hidden">
+<div id="modalRoot"></div>
+<div id="toasts"></div>
+<div id="printArea"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import { getFirestore, collection, doc, addDoc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, orderBy, where, limit, onSnapshot }
+  from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
+  from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js';
+
+const FB_VER = '12.19.0';
+const firebaseConfig = {
+  apiKey: "AIzaSyAc_yJQ_rkzuOBh-Yxg0Q4eooXtB-tQjm0",
+  authDomain: "pingu-solar.firebaseapp.com",
+  projectId: "pingu-solar",
+  storageBucket: "pingu-solar.firebasestorage.app",
+  messagingSenderId: "232764952866",
+  appId: "1:232764952866:web:5923b7f419de6355d6157b",
+  measurementId: "G-PFH059DZ64"
+};
+
+/* Firestore collections – all prefixed "Automated Solar - " */
+const COL = {
+  jobs:      'Automated Solar - Jobs',
+  photos:    'Automated Solar - Photos',
+  critiques: 'Automated Solar - Critiques',
+  settings:  'Automated Solar - Settings'
+};
+const STORAGE_ROOT = 'Automated Solar';
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+/* ═════════════ AUDIT QUESTIONS (from Solar/adminaudit.html) ═════════════ */
+const auditQuestionsData = [
+            // Pre Installation Information
+            { id: "h1", isHeader: true, text: "Pre Installation Information" },
+            { id: "q1", text: "Check type of Install, Battery/ies, Inverter size, No. of panels and layo", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E18", text: "CAT 1 E18 - System has not been commissioned correctly (import/export limits).", cat: 1, action: "KF must be checked for import/export limits and specific details added to notes."}
+            ]},
+            { id: "q1b", text: "Is the system reporting correctly? Load & Generation.", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E38", text: "CAT 3 E38 - System has not been set up correctly on the online portal e.g. No array map", cat: 3, action: "All devices and arrays must be set up on the app during commissioning."}
+            ]},
+            { id: "q2", isBold: true, pdfSectionHeader: true, text: "RAMS Confirmation - Complete", options: ["Yes", "No"], triggers: "No", ifNoAction: "Yes must be selected on Kracken Field job card." },
+            { id: "q3", isBold: true, pdfSectionHeader: true, text: "Core Risk Assessment - Complete", options: ["Yes", "No", "N/A"], triggers: "No", ifNoAction: "All sections must be complete for each installer on site." },
+            { id: "q4", isBold: true, pdfSectionHeader: true, text: "Working from Height Risk Assessment", options: ["Yes", "No", "N/A"], triggers: "No", ifNoAction: "If N/A the remaining questions in Working from Height Risk Assessment are not required. All section must be complete." },
+            { id: "q5", text: "Exclusion zones set up and explained to the customer?", options: ["Yes", "No"], triggers: "No", ifNoAction: "Please use tape or cone in photo of exclusion zone." },
+            { id: "q6", text: "Scaffolding tag", options: ["Yes", "No"], triggers: "No", ifNoAction: "Scaff tag photo must be clear and show dates." },
+            { id: "q7", text: "Full scaffold", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear full photo of the erected scaffold." },
+            { id: "q8", text: "Gin wheel", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photo of gin wheel in place." },
+            { id: "q9", text: "Platform access", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photo of Platform access." },
+            { id: "q10", text: "Edge Protection", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photo of edge protection in place." },
+            { id: "q11", text: "Working Platform", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photo of working platform." },
+            { id: "q12", text: "Ladder", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photo of ladder in place." },
+            { id: "q13", text: "All remaining question complete and correct.", options: ["Yes", "No"], triggers: "No", ifNoAction: "All questions must be answered, date and signature." },
+            
+            // Pre Install
+            { id: "h2", isHeader: true, text: "Pre Install" },
+            { id: "q14", text: "Inverter/Battery location", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need pre photo of inverter and battery location."}] },
+            { id: "q15", text: "PV consumer unit location", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need pre photo of PVDB location."}] },
+            { id: "q16", text: "Cable runs", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need multiple clear pre photos of cable runs."}] },
+            { id: "q17", text: "Check plug used before install", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 3 - E40", text: "CAT 3 E40 - No socket polarity plug test / only one performed.", cat: 3, action: "Need clear photos of socket polarity tester showing no faults."}] },
+            { id: "q18", text: "Electric Meter Location", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need pre photo of meter location. Must be clear full photo."}] },
+            { id: "q19", text: "CCU Location", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photo of CCU before install begins."}] },
+            { id: "q20", text: "Existing damage detail", options: ["Yes", "No", "N/A"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All existing damage must have clear photos uploaded to job card."}] },
+            { id: "q21", text: "Referencing OES-TBT-119 does the PV array require bonding?", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 2 - E27", text: "CAT 2 E27 - Bonding not up to standards.", cat: 2, action: "Where bonding is required clear photos must be provided."}] },
+            
+            // Installation
+            { id: "h3", isHeader: true, text: "Installation" },
+            { id: "q22", text: "Main equipotential bonding in place and adequate", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E8", text: "CAT 1 E8 - Testing/results not to industry standards COP/BS7671 (see notes).", cat: 1, action: "Need clear photos of all testing results from all circuits and DC."},
+                {val: "CAT 1 - E10", text: "CAT 1 E10 - Loose terminations greater than 360 rotation on any termination.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E11", text: "CAT 1 E11 - Terminals are overtightened top of terminal, screw rounded/broken.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 2 - E27", text: "CAT 2 E27 - Bonding not up to standards.", cat: 2, action: "Need clear photos of earthing in place on gas/water/etc."},
+                {val: "CAT 2 - E32", text: "CAT 2 E32 - Not installed as per MI's/required standards.", cat: 2, action: "Provide details in notes."},
+                {val: "CAT 2 - EX2", text: "CAT 2 EX2 - Miscellaneous - (see notes).", cat: 2, action: "Add details to notes."},
+                {val: "CAT 3 - E41", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "All recorded testing results must match photographed results."},
+                {val: "CAT 3 - E49", text: "CAT 3 E49 - Terminations not adequately tightened - Rotation on any terminal screw between 180 & 360 degrees.", cat: 3, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 3 - EX3", text: "CAT 3 EX3 - Miscellaneous (see notes).", cat: 3, action: "Add details to notes."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need photos to prove bonding on both gas and water or prove plastic."}
+            ] },
+            { id: "q23", text: "Panels, Hooks, Battries, Serial Numbers", options: ["Yes", "No"], triggers: "No", ifNoAction: "Correct panels to match design must be recorded with clear photos." },
+            { id: "q24", text: "AC/DC isolators in correct position and terminated correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E4", text: "CAT 1 E4 - Cable damaged/ cable damaged during installation.", cat: 1, action: "Need clear photos of cables installed internal and external."},
+                {val: "CAT 1 - E5", text: "CAT 1 E5 - Reverse Polarity AC", cat: 1, action: "Need clear internal connection photos of isolator and test results."},
+                {val: "CAT 1 - E6", text: "CAT 1 E6 - Reverse Polarity DC", cat: 1, action: "Need clear internal connection photos of isolators and surge protection and test results."},
+                {val: "CAT 1 - E7", text: "CAT 1 E7 - Equipment/Accessories do not protect to suitable IP rating for location.", cat: 1, action: "Need clear photos of sealant in place and any caps in place on all switches/boards."},
+                {val: "CAT 1 - E10", text: "CAT 1 E10 - Loose terminations greater than 360 rotation on any termination.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E11", text: "CAT 1 E11 - Terminals are overtightened top of terminal, screw rounded/broken.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 2 - E32", text: "CAT 2 E32 - Not installed as per MI's/OES standards.", cat: 2, action: "Provide details in notes."},
+                {val: "CAT 3 - E34", text: "CAT 3 E34 - Incorrect ferrules/crimps used of fitted.", cat: 3, action: "Need clear photos of correct crimps/ferrules used where required."},
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need photos of isolators internal and external."},
+                {val: "CAT 3 - E42", text: "CAT 3 E42 - No/Incorrect Glands/Bushes installed (Incorrect cable entry).", cat: 3, action: "Need clear photos of correct size/type glands/bushes in place."},
+                {val: "CAT 3 - E49", text: "CAT 3 E49 - Terminations not adequately tightened - Rotation on any terminal screw between 180 & 360 degrees.", cat: 3, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photos of AC cable runs."}
+            ]},
+            { id: "q25", text: "Do all enclosures provide correct degree of protection", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E7", text: "CAT 1 E7 - Equipment/Accessories do not protect to suitable IP rating for location.", cat: 1, action: "Need clear photos of sealant in place and any caps in place on all switches/boards."}
+            ]},
+            { id: "q26", text: "Correct ferrules/crimps used", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 3 - E34", text: "CAT 3 E34 - Incorrect ferrules/crimps used of fitted.", cat: 3, action: "Need clear photos of correct crimps/ferrules used where required."}
+            ]},
+            { id: "q27", text: "DC supply cable installed neatly, correctly with warning labels", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 1 - E19", text: "CAT 1 E19 - Installation fitted outside BS 7671 requirements without OES approval.", cat: 1, action: "Any variations must be approved by OES and recorded on job card."},
+                {val: "CAT 1 - E20", text: "CAT 1 E20 - Fire rated clips not use or insufficient for cable run.", cat: 1, action: "Need clear photos of fire rated clips in use on all cable runs internal and external."},
+                {val: "CAT 2 - E21", text: "CAT 2 E21 - DC cable has no warning stickers.", cat: 2, action: "Need clear photos of DC warning stickers in place in line with MCS requirements."},
+                {val: "CAT 2 - E24", text: "CAT 2 E24 - Cable installed in incorrect zones.", cat: 2, action: "Need clear photos of installed cable runs internal and external."},
+                {val: "CAT 4 - E50", text: "CAT 4 E50 - DC cable not sticker enough for length of run", cat: 4, action: "Need clear photos of DC warning stickers in place in line with MCS requirements."}
+            ]},
+            { id: "q28", text: "AC supply cable installed neatly & correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E4", text: "CAT 1 E4 - Cable damaged/ cable damaged during installation.", cat: 1, action: "Need clear photos of cables installed internal and external."},
+                {val: "CAT 1 - E13", text: "CAT 1 E13 - Signs of distress overheating burning etc.", cat: 1, action: "Need clear photos of AC connections showing no signs of distress."},
+                {val: "CAT 1 - E20", text: "CAT 1 E20 - Fire rated clips not use or insufficient for cable run.", cat: 1, action: "Need clear photos of fire rated clips in use on all cable runs internal and external."},
+                {val: "CAT 2 - E23", text: "CAT 2 E23 - Incorrect cable type installed.", cat: 2, action: "Need clear photos of cable types installed."},
+                {val: "CAT 2 - E24", text: "CAT 2 E24 - Cable installed in incorrect zones.", cat: 2, action: "Need clear photos of installed cable runs internal and external."},
+                {val: "CAT 2 - E32", text: "CAT 2 E32 - Not installed as per MI's/OES standards.", cat: 2, action: "Provide details in notes."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photos of AC cable runs."}
+            ]},
+            { id: "q29", text: "Correct glands used and fitted correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E42", text: "CAT 3 E42 - No/Incorrect Glands/Bushes installed (Incorrect cable entry).", cat: 3, action: "Need clear photos of correct size/type glands/bushes in place."}
+            ]},
+            { id: "q30", text: "Correct cable selected for install", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 2 - E22", text: "CAT 2 E22 - Undersized cable installed for equipmenty/length of cable run.", cat: 2, action: "Need clear photos of cable sizes installed."},
+                {val: "CAT 2 - E23", text: "CAT 2 E23 - Incorrect cable type installed.", cat: 2, action: "Need clear photos of cable types installed."}
+            ]},
+            { id: "q31", text: "Fire rated fixing used", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E20", text: "CAT 1 E20 - Fire rated clips not use or insufficient for cable run.", cat: 1, action: "Need clear photos of fire rated clips in use on all cable runs internal and external."}
+            ]},
+            { id: "q32", text: "Has fire detection been installed", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 1 - E14", text: "CAT 1 E14 - Fire detection not fitted or incorrectly fitted.", cat: 1, action: "Need clear photos of fire detection fitted where necessary."}
+            ]},
+            { id: "q33", text: "Henley blocks installed correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E5", text: "CAT 1 E5 - Reverse Polarity AC", cat: 1, action: "Need clear internal connection photos of PVDB and test results."},
+                {val: "CAT 1 - E9", text: "CAT 1 E9 - Exposed Conductors (Including unplugged holes, both live and neutral and customer blocks).", cat: 1, action: "Need clear photos of all conductor connections and blanks in place."},
+                {val: "CAT 1 - E10", text: "CAT 1 E10 - Loose terminations greater than 360 rotation on any termination.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E11", text: "CAT 1 E11 - Terminals are overtightened top of terminal, screw rounded/broken", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E17", text: "CAT 1 E17 - Single insulation visible outside of enclosures.", cat: 1, action: "Need clear photos of internal henley block connections."},
+                {val: "CAT 2 - E25", text: "CAT 2 E25 - Conductor only secured by one terminal screw in henley blocks.", cat: 2, action: "Need clear photos of internal henley block connections."},
+                {val: "CAT 2 - E32", text: "CAT 2 E32 - Not installed as per MI's/OES standards.", cat: 2, action: "Provide details in notes."},
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need clear photos of internal henley block connections."},
+                {val: "CAT 3 - E48", text: "CAT 3 E48 - No polarity identification on grey tails/grey tails used.", cat: 3, action: "Need clear photo showing any grey tails are marked up."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photos of internal henley block connections."}
+            ]},
+            { id: "q34", text: "PV DB installed and terminated correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E4", text: "CAT 1 E4 - Cable damaged", cat: 1, action: "Need clear internal connection photos of PVDB and cables."},
+                {val: "CAT 1 - E5", text: "CAT 1 E5 - Reverse Polarity AC", cat: 1, action: "Need clear internal connection photos of PVDB and test results."},
+                {val: "CAT 1 - E7", text: "CAT 1 E7 - Equipment/Accessories do not protect to suitable IP rating for location.", cat: 1, action: "Need clear photos of sealant in place and any caps in place on all switches/boards."},
+                {val: "CAT 1 - E10", text: "CAT 1 E10 - Loose terminations greater than 360 rotation on any termination.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E11", text: "CAT 1 E11 - Terminals are overtightened top of terminal, screw rounded/broken", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E13", text: "CAT 1 E13 - Signs of distress, overheating, burning, etc.", cat: 1, action: "Need clear photos of AC connections showing no signs of distress."},
+                {val: "CAT 1 - E16", text: "CAT 1 E16 - Incorrect protective device installed (ka, RCD type, RCD ma, MCB over/under sized).", cat: 1, action: "Need clear internal connection photos of PVDB."},
+                {val: "CAT 1 - E19", text: "CAT 1 E19 - Installation fitted outside BS 7671 requirements without OES approval.", cat: 1, action: "Any variations must be approved by OES and recorded on job card."},
+                {val: "CAT 2 - E22", text: "CAT 2 E22 - Undersized cable installed for equipmenty/length of cable run.", cat: 2, action: "Need clear photos of cable sizes installed."},
+                {val: "CAT 2 - E23", text: "CAT 2 E23 - Incorrect cable type installed.", cat: 2, action: "Need clear photos of cable types installed."},
+                {val: "CAT 2 - E32", text: "CAT 2 E32 - Not installed as per MI's/OES standards.", cat: 2, action: "Provide details in notes."},
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need clear photos of PVDB."},
+                {val: "CAT 3 - E42", text: "CAT 3 E42 - No/Incorrect Glands/Bushes installed (Incorrect cable entry).", cat: 3, action: "Need clear photos of correct size/type glands/bushes in place."},
+                {val: "CAT 3 - E43", text: "CAT 3 E43 - MCB, RCBO undersized for install.", cat: 3, action: "Need clear internal connection photos of PVDB."},
+                {val: "CAT 3 - E49", text: "CAT 3 E49 - Terminations not adequately tightened - Rotation on any terminal screw between 180 & 360 degrees.", cat: 3, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photos of PVDB."}
+            ]},
+            { id: "q35", text: "Are MCBs/RCDs correct for install", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E16", text: "CAT 1 E16 - Incorrect protective device installed", cat: 1, action: "Need clear photos of installed MCB's and RCD's showing sizes."},
+                {val: "CAT 3 - E43", text: "CAT 3 E43 - MCB, RCBO over/undersized for install.", cat: 3, action: "Need clear photos of installed MCB's, RCD's, RCBO's showing sizes."}
+            ]},
+            { id: "q36", text: "Correct ferrules/crimps used", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 3 - E34", text: "CAT 3 E34 - Incorrect ferrules/crimps used of fitted.", cat: 3, action: "Need clear photos of correct crimps/ferrules used where required."}
+            ]},
+            { id: "q37", text: "Correct glands used and fitted correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E42", text: "CAT 3 E42 - No/Incorrect Glands/Bushes installed (Incorrect cable entry).", cat: 3, action: "Need clear photos of correct size/type glands/bushes in place."}
+            ]},
+            { id: "q38", text: "Inverter and battery installed correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E7", text: "CAT 1 E7 - Equipment/Accessories do not protect to suitable IP rating for location.", cat: 1, action: "Need clear photos of sealant in place and any caps in place on all switches/boards."},
+                {val: "CAT 1 - E12", text: "CAT 1 E12 - Engineer worked out of scope/Engineer not applying competence (see notes).", cat: 1, action: "Provide specific details in notes."},
+                {val: "CAT 1 - E15", text: "CAT 1 E15 - Solar equipment installed using incorrect fixings.", cat: 1, action: "Need clear photo of correct fixings in place."},
+                {val: "CAT 1 - E19", text: "CAT 1 E19 - Installation fitted outside BS 7671 requirements without OES approval(see notes).", cat: 1, action: "Any variations must be approved by OES and recorded on job card."},
+                {val: "CAT 2 - E26", text: "CAT 2 E26 - Solar equipment not installed in correct location.", cat: 2, action: "Need explanation of change in locations and authorisation prior to install from OES and Customer."},
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need clear photo showing installed inverter and battery."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photo showing installed inverter and battery."}
+            ]},
+            { id: "q39", text: "Battery cable terminated correctly", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 1 - E5", text: "CAT 1 E5 - Reverse Polarity AC", cat: 1, action: "Need clear internal connection photos of Battery and test results."},
+                {val: "CAT 1 - E10", text: "CAT 1 E10 - Loose terminations greater than 360 rotation on any termination.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 1 - E13", text: "CAT 1 E13 - Signs of distress, overheating, burning, etc.", cat: 1, action: "Need clear photos of internal battery connections showing no signs of distress."},
+                {val: "CAT 1 - E17", text: "CAT 1 E17 - Single insulation visible outside of enclosures.", cat: 1, action: "Need clear photos of internal battery connections."},
+                {val: "CAT 2 - E32", text: "CAT 2 E32 - Not installed as per MI's/OES standards.", cat: 2, action: "Provide details in notes."},
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need clear photos of battery."},
+                {val: "CAT 3 - E49", text: "CAT 3 E49 - Terminations not adequately tightened - Rotation on any terminal screw between 180 & 360 degrees.", cat: 3, action: "Need clear photos of all terminal screws tightened correctly."}
+            ]},
+            { id: "q40", text: "Inverter and battery bonded together", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E12", text: "CAT 1 E12 - Engineer worked out of scope/Engineer not applying competence (see notes).", cat: 1, action: "Provide specific details in notes."},
+                {val: "CAT 2 - E27", text: "CAT 2 E27 - Bonding not up to standards.", cat: 2, action: "Need clear photos of earthing in place on inverter and battery."}
+            ]},
+            { id: "q41", text: "All holes filled with correct sealant", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E47", text: "CAT 3 E47 - No waterproof sealant used on exterior wall or fire sealant on interior wall.", cat: 3, action: "Need clear photos showing silicone neatly in place externally."}
+            ]},
+            { id: "q42", text: "Installed panels", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photos of all panels for all arrays in place." },
+            { id: "q43", text: "Has bird mesh been installed", options: ["Yes", "No", "N/A"], triggers: "No", ifNoAction: "Need clear photos of bird mesh showing correct install." },
+            { id: "q44", text: "Installed roof rails", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photos of all rails with the correct amount of fixings." },
+            { id: "q45", text: "Installed roof hook", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photos of roof hooks with two fixings into rafter." },
+            { id: "q46", text: "PV cable entry point to property", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photos showing correct cable entry with drip loops and adequate clearances from tiles." },
+            { id: "q47", text: "Have any broken tiles and replacements been recorded", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear photos of any broken tiles and the replacements." },
+            
+            // Site Investigation
+            { id: "h4", isHeader: true, text: "Site Investigation" },
+            { id: "q48", text: "Fuse rating", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E28", text: "CAT 2 E28 - Fuse pull has been carried out but not filled in on KF (SIP).", cat: 2, action: "Need clear photo showing main fuse after pulling."},
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need clear photo showing main fuse after pulling."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All photos must be original photos not photos of photos."}
+            ]},
+            { id: "q49", text: "Check plug used before and after", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 3 - E40", text: "CAT 3 E40 - No socket polarity plug test / only one performed.", cat: 3, action: "Need clear photos of socket polarity tester showing no faults."}] },
+            { id: "q50", text: "CCU Location", options: ["Yes", "No"], triggers: "No", codes: [{val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photo of CCU before install begins. CCU..."}] },
+            { id: "q51", text: "Earthing Sytem", options: ["TT", "TN-S/SNE", "TNCS/PME"], type: "select", triggers: "", ifNoAction: "Correct earthing system needs recorded." },
+            { id: "q52", text: "Have all DNO codes been reported accurately", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 1 - E1", text: "CAT 1 E1 - Missed an A code on distribution equipment (DNO).", cat: 1, action: "Need clear pre photo of meter, cut out, any isolation, earthing type."},
+                {val: "CAT 3 - E33", text: "CAT 3 E33 - Missed an B/C code on distribution equipment (DNO).", cat: 3, action: "Need clear pre photo of meter, cut out, any isolation, earthing type."}
+            ]},
+            { id: "q53", text: "Have all outgoing tails from the cutout been sufficiently tightened", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E10", text: "CAT 1 E10 - Loose terminations greater than 360 rotation on any termination.", cat: 1, action: "Need clear photos of all terminal screws tightened correctly."},
+                {val: "CAT 3 - E49", text: "CAT 3 E49 - Terminations not adequately tightened - Rotation on any terminal screw between 180 & 360 degrees.", cat: 3, action: "Need clear photos of all terminal screws tightened correctly."}
+            ]},
+            { id: "q54", text: "Complete job", options: ["Yes", "No"], triggers: "No", ifNoAction: "Need clear full photo of meter point, cutout (resealed), isolators, Henley blocks." },
+            
+            // EIC
+            { id: "h5", isHeader: true, text: "EIC" },
+            { id: "q55", text: "EIC complete and filled out correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E30", text: "CAT 2 E30 - EIC is not complete or incorrectly complete", cat: 2, action: "All forms must be fully complete and results from any testing must match photographic evidence."},
+                {val: "CAT 3 - E36", text: "CAT 3 E36 - Job card is blank and system is commissioned.", cat: 3, action: "All forms must be fully complete and results from any testing must match photographic evidence."},
+                {val: "CAT 3 - E41", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "All recorded testing results must match photographed results and be within limits."},
+                {val: "CAT 3 - E41 (Customer)", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "The customer must sign the job card upon completion."}
+            ]},
+            { id: "q56", text: "Are all test results within BS7671 limit", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E8", text: "CAT 1 E8 - Testing/results not to industry standards COP/BS7671 (see notes).", cat: 1, action: "Need clear photos of all testing results from all circuits and DC."},
+                {val: "CAT 3 - E41", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "All recorded testing results must match photographed results and be within limits."},
+                {val: "CAT 4 - E51", text: "CAT 4 E51 - Testing on MFT using incorrect setting.", cat: 4, action: "Need clear photos of all tesing showing testers on correct setting for test."}
+            ]},
+            { id: "q57", text: "EIC Circuits complete and filled out correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E30", text: "CAT 2 E30 - EIC is not complete or incorrectly complete", cat: 2, action: "All forms must be fully complete and results from any testing must match photographic evidence."},
+                {val: "CAT 3 - E36", text: "CAT 3 E36 - Job card is blank and system is commissioned.", cat: 3, action: "All forms must be fully complete and results from any testing must match photographic evidence."},
+                {val: "CAT 3 - E41", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "All recorded testing results must match photographed results and be within limits."}
+            ]},
+            { id: "q58", text: "Are all test results within BS7671 limit", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E8", text: "CAT 1 E8 - Testing/results not to industry standards COP/BS7671 (see notes).", cat: 1, action: "Need clear photos of all testing results from all circuits and DC."},
+                {val: "CAT 3 - E41", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "All recorded testing results must match photographed results and be within limits."},
+                {val: "CAT 4 - E51", text: "CAT 4 E51 - Testing on MFT using incorrect setting.", cat: 4, action: "Need clear photos of all tesing showing testers on correct setting for test."}
+            ]},
+            { id: "q59", pdfSectionHeader: true, text: "Building Control", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "Building Control must be correct and fully complete."}
+            ]},
+            { id: "q60", pdfSectionHeader: true, text: "EIC Signoff", options: ["Yes", "No"], triggers: "No", ifNoAction: "EIC Signoff must be correct and fully complete after install." },
+            { id: "q61", pdfSectionHeader: true, text: "PV Commissioning", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "PV Commissioning must be correct and fully complete."}
+            ]},
+            { id: "q62", pdfSectionHeader: true, text: "Battery Commissioning", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are not complete or incorrectly complete.", cat: 2, action: "Battery Commissioning must be correct and fully complete."}
+            ]},
+            
+            // PV Array Test
+            { id: "h6", isHeader: true, text: "PV Array Test" },
+            { id: "q63", text: "Has PV array sheet been complete", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E29", text: "CAT 2 E29 - PV Array test not complete or incorrectly complete.", cat: 2, action: "Need screen shot of submission added to additional notes."},
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "All forms must be fully complete and results from any testing must match photographic evidence."}
+            ]},
+            { id: "q64", pdfSectionHeader: true, text: "Battery Inspection", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "Battery Inspection must be fully complete and correct."}
+            ]},
+            { id: "q65", pdfSectionHeader: true, text: "PV Installation", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "PV Installation must be fully complete and correct."}
+            ]},
+            { id: "q66", pdfSectionHeader: true, text: "Post Install Customer", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "Post Install Customer must be fully complete by the customer."},
+                {val: "CAT 4 - E54", text: "CAT 4 E54 - No customer signature on job card.", cat: 4, action: "The customer must sign the job card upon completion."}
+            ]},
+            { id: "q67", pdfSectionHeader: true, text: "Post Install Engineer", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 2 - E31", text: "CAT 2 E31 - MCS forms are no complete or incorrectly complete.", cat: 2, action: "Post Install Engineer must be fully complete at the time of installation."}
+            ]},
+            { id: "q68", text: "Check plug used before and after", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E40", text: "CAT 3 E40 - No socket polarity plug test / only one performed.", cat: 3, action: "Need clear photos of socket polarity tester showing no faults."}
+            ]},
+            { id: "q69", text: "Installed inverter/battery has correct labelling", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E44", text: "CAT 3 E44 - Safety labelling missing from inverter, storage battery or metering position.", cat: 3, action: "Need clear photos showing solar on roof stickers in place."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All photos must be original photos not photos of photos and are required to evidence the install."},
+                {val: "CAT 4 - E55", text: "CAT 4 E55 - Periodic and RCD test label missing.", cat: 4, action: "Need clear photo of RCD test and periodic sticker on PVDB."}
+            ]},
+            { id: "q70", text: "PV DB has all correct labelling (inc RCD test and periodic)", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E44", text: "CAT 3 E44 - Safety labelling missing from inverter, storage battery or metering position.", cat: 3, action: "Need clear photos showing solar on roof stickers in place."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All photos must be original photos not photos of photos and are required to evidence the install."},
+                {val: "CAT 4 - E55", text: "CAT 4 E55 - Periodic and RCD test label missing.", cat: 4, action: "Need clear photo of RCD test and periodic sticker on PVDB."}
+            ]},
+            { id: "q71", text: "CT clamp installed correctly", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need clear photo of CT clamp in place and showing direction."},
+                {val: "CAT 3 - E39", text: "CAT 3 E39 - CT clamp installed in the incorrect location / not fitted.", cat: 3, action: "Need clear photo of CT clamp in place and showing direction."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All photos must be original photos not photos of photos and are required to evidence the install."}
+            ]},
+            { id: "q72", text: "Solar on roof label at meter point", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E44", text: "CAT 3 E44 - Safety labelling missing from inverter, storage battery or metering position.", cat: 3, action: "Need clear photos showing solar on roof stickers in place."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All photos must be original photos not photos of photos and are required to evidence the install."},
+                {val: "CAT 4 - E55", text: "CAT 4 E55 - Periodic and RCD test label missing.", cat: 4, action: "Need clear photo of RCD test and periodic sticker on PVDB."}
+            ]},
+            
+            // Additional Notes
+            { id: "h7", isHeader: true, text: "Additional Notes" },
+            { id: "q73", text: "Lock-off kit used", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 4 - E56", text: "CAT 4 E56 - No lock off kit used.", cat: 4, action: "Need clear photo of lock off kit in use during installation."}
+            ]},
+            { id: "q74", text: "Missing photos", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "All photos must be original photos not photos of photos and are required to evidence the install."},
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "All photos must be original photos not photos of photos and are required to evidence the install."}
+            ]},
+            { id: "q75", text: "Wiska Box Connections", options: ["Yes", "No", "N/A"], triggers: "No", codes: [
+                {val: "CAT 4 - E53", text: "CAT 4 E53 - Missing non safety critical photos.", cat: 4, action: "Need clear photos of Wiska box connections internal and external."}
+            ]},
+            { id: "q76", text: "Testing Photos", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 3 - E35", text: "CAT 3 E35 - Missing saftey critical photos.", cat: 3, action: "Need photos of all testing for all circuits. R1 & R2, IR, ZS, ZE, RCD."}
+            ]},
+            { id: "q77", text: "Are all test results within BS7671 limit", options: ["Yes", "No"], triggers: "No", codes: [
+                {val: "CAT 1 - E8", text: "CAT 1 E8 - Testing/results not to industry standards COP/BS7671 (see notes).", cat: 1, action: "Need clear photos of all testing results from all circuits and DC."},
+                {val: "CAT 3 - E41", text: "CAT 3 E41 - Testing results different to recorded details but within limits.", cat: 3, action: "All recorded testing results must match photographed results."},
+                {val: "CAT 4 - E51", text: "CAT 4 E51 - Testing on MFT using incorrect setting.", cat: 4, action: "Need clear photos of all tesing showing testers on correct setting for test."}
+            ]},
+            { id: "q78", text: "Is all evidene complete on required system.", options: ["Yes", "No"], triggers: "No", ifNoAction: "If Kracken Field is not complete the install is not complete! Send email." }
+        ];
+
+const STAGES = [
+  { id:'pre',     label:'Pre-install',  sub:'RAMS, access & pre-work evidence' },
+  { id:'install', label:'Installation', sub:'Install quality & site investigation' },
+  { id:'post',    label:'Post-install', sub:'Testing, certification & handover' }
+];
+const STAGE_OF = { h1:'pre', h2:'pre', h3:'install', h4:'install', h5:'post', h6:'post', h7:'post' };
+// If Working-from-Height RA is N/A these are not required (same rule as adminaudit.html)
+const WAH_HIDE = ['q5','q6','q7','q8','q9','q10','q11','q12','q13','q42','q43','q44','q45','q46','q47','q61','q63','q65'];
+// Hidden automatically for "PV only" systems
+const BATTERY_Q = ['q39','q40','q62','q64'];
+
+const SECTIONS = []; const QUESTIONS = []; const QMAP = {};
+(() => {
+  let sec = null, n = 0;
+  auditQuestionsData.forEach(q => {
+    if (q.isHeader) { sec = { id:q.id, title:q.text, stage:STAGE_OF[q.id] || 'post', items:[] }; SECTIONS.push(sec); return; }
+    const item = { ...q, section:sec.title, stage:sec.stage, num:++n };
+    sec.items.push(item); QUESTIONS.push(item); QMAP[q.id] = item;
+  });
+})();
+const CODE_MAP = {};
+QUESTIONS.forEach(q => (q.codes || []).forEach(c => { if (!CODE_MAP[c.val]) CODE_MAP[c.val] = { val:c.val, text:c.text, cat:c.cat, action:c.action }; }));
+const MASTER_CODES = Object.values(CODE_MAP).sort((a,b) => a.cat - b.cat || a.val.localeCompare(b.val, undefined, {numeric:true}));
+const CAT_LABEL = { 1:'Safety critical', 2:'Policy', 3:'Non-conformance', 4:'Minor / evidence' };
+
+/* ═════════════ STATE ═════════════ */
+const DEFAULT_SETTINGS = {
+  companyName: 'Automated Solar',
+  provider: 'firebase',
+  geminiModel: 'gemini-3.8-flash',
+  claudeModel: 'claude-sonnet-5-5',
+  autoAccept: 0.85,
+  maxPhotos: 6,
+  reportEmail: ''
+};
+const S = {
+  view:'dashboard', jobs:[], job:null, photos:[], stage:'pre', filter:'all',
+  settings:{ ...DEFAULT_SETTINGS }, dirty:new Set(), dirtyMeta:false, busy:{}, cancel:false,
+  pickTarget:null, ins:{ photos:[], result:null, context:'' }, critiques:[], jobSearch:'', jobOutcome:'', jobStatus:''
+};
+const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k, v); } catch {} };
+const auditorName = () => lsGet('as_auditor') || 'Auditor';
+
+/* ═════════════ HELPERS ═════════════ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = t => t ? new Date(t).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+const fmtDT = t => t ? new Date(t).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+const clean = o => JSON.parse(JSON.stringify(o ?? null));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const imgSrc = p => p.img ? 'data:image/jpeg;base64,' + p.img : (p.url || '');
+
+const I = {
+  cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
+  ai:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 2l1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8zM18 13l.9 2.6 2.6.9-2.6.9L18 20l-.9-2.6-2.6-.9 2.6-.9z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>',
+  stack:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="13" rx="1.5"/><path d="M7 4h13a1 1 0 0 1 1 1v12"/><path d="M5 17l4-4 3 3 2-2 3 3"/></svg>'
+};
+
+function toast(msg, type='', ms=3500) {
+  const el = document.createElement('div'); el.className = 'toast ' + type; el.textContent = msg;
+  $('#toasts').appendChild(el); setTimeout(() => el.remove(), ms);
+}
+
+/* ═════════════ MODAL ═════════════ */
+function openModal({ title, body, foot='', wide=false, onClose=null }) {
+  $('#modalRoot').innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal ${wide?'wide':''}" role="dialog" aria-modal="true">
+    <div class="mh"><h2>${title}</h2><button class="x" data-act="closeModal" aria-label="Close">×</button></div>
+    <div class="mb">${body}</div>${foot ? `<div class="mf">${foot}</div>` : ''}</div></div>`;
+  S.modalOnClose = onClose;
+}
+function closeModal() {
+  const fn = S.modalOnClose; S.modalOnClose = null; $('#modalRoot').innerHTML = ''; if (fn) fn();
+}
+
+/* ═════════════ QUESTION LOGIC ═════════════ */
+function ans(qid) {
+  const j = S.job; if (!j.answers) j.answers = {};
+  if (!j.answers[qid]) j.answers[qid] = { answer:'', codes:[], notes:'', review:'', ai:null };
+  const a = j.answers[qid]; if (!a.codes) a.codes = []; return a;
+}
+const peek = (job, qid) => (job.answers || {})[qid];
+function isHidden(q, job=S.job) {
+  if (WAH_HIDE.includes(q.id) && peek(job,'q4')?.answer === 'N/A') return true;
+  if (BATTERY_Q.includes(q.id) && job.systemType === 'PV only') return true;
+  return false;
+}
+const visibleQs = (job=S.job, stage=null) => QUESTIONS.filter(q => !isHidden(q, job) && (!stage || q.stage === stage));
+function reviewState(q, job=S.job) {
+  const a = peek(job, q.id);
+  if (!a) return 'open';
+  if (a.review === 'needs') return 'needs';
+  if (!a.answer) return 'open';
+  return a.review === 'ai' ? 'ai' : 'human';
+}
+const isFail = (q, job=S.job) => { const a = peek(job, q.id); return !!a && !!q.triggers && a.answer === q.triggers; };
+function guidanceFor(q) {
+  const acts = new Set(); if (q.ifNoAction) acts.add(q.ifNoAction); (q.codes || []).forEach(c => acts.add(c.action));
+  return [...acts];
+}
+function matchCode(s) {
+  if (!s) return null; if (CODE_MAP[s]) return s;
+  const m = String(s).match(/CAT\s*(\d)\D*?(EX?\d+)/i);
+  if (m) { const hit = MASTER_CODES.find(c => c.cat == m[1] && c.val.replace(/\s/g,'').toUpperCase().endsWith('-' + m[2].toUpperCase())); if (hit) return hit.val; }
+  return null;
+}
+function computeOutcome(job) {
+  let hi = 99, codes = 0, fails = 0;
+  visibleQs(job).forEach(q => {
+    const a = peek(job, q.id); if (!a) return;
+    if (q.triggers && a.answer === q.triggers) fails++;
+    (a.codes || []).forEach(c => { codes++; const cat = CODE_MAP[c]?.cat; if (cat && cat < hi) hi = cat; });
+  });
+  let key, label;
+  if (hi === 1) { key='safety'; label='Safety Fail'; }
+  else if (hi === 2) { key='policy'; label='Policy Fail'; }
+  else if (hi === 3 || hi === 4) { key='pnc'; label='Pass with non-conformances (PNC)'; }
+  else { key='pass'; label = fails ? 'Pass – actions required' : 'Pass'; }
+  return { key, label, highestCat: hi === 99 ? null : hi, codes, fails };
+}
+function summarise(job) {
+  const vq = visibleQs(job); const stageProgress = {};
+  STAGES.forEach(s => {
+    const qs = vq.filter(q => q.stage === s.id);
+    stageProgress[s.id] = { total: qs.length, answered: qs.filter(q => peek(job,q.id)?.answer).length, needs: qs.filter(q => reviewState(q,job)==='needs').length };
+  });
+  const o = computeOutcome(job);
+  return {
+    totalQ: vq.length,
+    answeredQ: vq.filter(q => peek(job,q.id)?.answer).length,
+    needsReview: vq.filter(q => reviewState(q,job)==='needs').length,
+    aiAccepted: vq.filter(q => reviewState(q,job)==='ai').length,
+    humanVerified: vq.filter(q => reviewState(q,job)==='human').length,
+    aiChecked: vq.filter(q => peek(job,q.id)?.ai && peek(job,q.id).ai.model !== 'rule').length,
+    outcome: o.key, outcomeLabel: o.label, highestCat: o.highestCat, failCount: o.fails, codeCount: o.codes,
+    stageProgress
+  };
+}
+const outcomePill = (key, label) => `<span class="pill o-${key || 'none'}">${esc(label || 'Not started')}</span>`;
+
+/* ═════════════ FIREBASE: JOBS ═════════════ */
+function setConn(ok, txt) { $('#connDot').className = 'dot ' + (ok ? 'ok' : 'bad'); $('#connTxt').textContent = txt; }
+
+function listenJobs() {
+  const qy = query(collection(db, COL.jobs), orderBy('updatedAt', 'desc'), limit(400));
+  onSnapshot(qy, snap => {
+    S.jobs = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    setConn(true, 'Firebase live');
+    if (S.view === 'dashboard') renderDashboard();
+  }, err => {
+    console.error(err); setConn(false, 'Offline');
+    $('#view-dashboard').innerHTML = `<div class="banner">Could not load jobs from Firestore (${esc(err.code || err.message)}). Check your Firestore rules allow the "${COL.jobs}" collection.</div>`;
+  });
+}
+
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, COL.settings, 'config'));
+    if (snap.exists()) S.settings = { ...DEFAULT_SETTINGS, ...snap.data() };
+  } catch (e) { console.warn('settings', e); }
+}
+
+async function createJob(data) {
+  const now = Date.now();
+  const job = { ...data, answers:{}, status:'In progress', createdAt:now, updatedAt:now, createdBy:auditorName() };
+  Object.assign(job, summarise(job));
+  const r = await addDoc(collection(db, COL.jobs), clean(job));
+  return { id:r.id, ...job };
+}
+
+let saveTimer = null;
+function markDirty(qid) { if (qid) S.dirty.add(qid); else S.dirtyMeta = true; setSaveInd('Saving…'); clearTimeout(saveTimer); saveTimer = setTimeout(saveJob, 900); }
+async function saveJob() {
+  const j = S.job; if (!j) return;
+  const sum = summarise(j); Object.assign(j, sum);
+  const upd = { ...sum, updatedAt: Date.now(), lastEditedBy: auditorName() };
+  S.dirty.forEach(qid => { upd['answers.' + qid] = clean(j.answers[qid]); });
+  if (S.dirtyMeta) ['jobNumber','customer','address','postcode','installer','installDate','systemType','panelCount','panelModel','inverter','battery','jobNotes','status','completedAt','completedBy','aiWriteup'].forEach(k => { if (j[k] !== undefined) upd[k] = clean(j[k]); });
+  S.dirty.clear(); S.dirtyMeta = false;
+  try { await updateDoc(doc(db, COL.jobs, j.id), upd); setSaveInd('Saved ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})); }
+  catch (e) { console.error(e); setSaveInd('Save failed'); toast('Save failed: ' + (e.code || e.message), 'err'); }
+}
+function setSaveInd(t) { const el = $('#saveInd'); if (el) el.textContent = t; }
+
+/* ═════════════ FIREBASE: PHOTOS ═════════════ */
+async function loadPhotos(jobId) {
+  const snap = await getDocs(query(collection(db, COL.photos), where('jobId', '==', jobId)));
+  S.photos = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => (a.uploadedAt||0) - (b.uploadedAt||0));
+}
+const photosFor = qid => S.photos.filter(p => (p.qIds || []).includes(qid));
+
+async function readImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url; await img.decode();
+    const draw = (max, q, asBlob) => {
+      const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      return asBlob ? new Promise(r => c.toBlob(r, 'image/jpeg', q)) : c.toDataURL('image/jpeg', q);
+    };
+    const full = await draw(2000, 0.85, true);
+    let ai = draw(1024, 0.72, false);
+    if (ai.length > 600000) ai = draw(800, 0.6, false);
+    return { full, img: ai.split(',')[1] };
+  } finally { URL.revokeObjectURL(url); }
+}
+
+async function addPhotoToJob(jobId, file, qIds=[], extra={}) {
+  const { full, img } = await readImage(file);
+  const now = Date.now();
+  const path = `${STORAGE_ROOT}/${jobId}/${now}_${Math.random().toString(36).slice(2,7)}.jpg`;
+  let url = null, storagePath = null;
+  try { const r = ref(storage, path); await uploadBytes(r, full, { contentType:'image/jpeg' }); url = await getDownloadURL(r); storagePath = path; }
+  catch (e) { console.warn('Storage upload failed – keeping compressed copy in Firestore only', e); }
+  const data = { jobId, qIds, url, storagePath, img, name:file.name || 'camera.jpg', uploadedAt:now, uploadedBy:auditorName(), ...extra };
+  const r = await addDoc(collection(db, COL.photos), clean(data));
+  const p = { id:r.id, ...data };
+  if (S.job && S.job.id === jobId) S.photos.push(p);
+  return p;
+}
+async function updatePhotoTags(p) { await updateDoc(doc(db, COL.photos, p.id), { qIds:p.qIds }); }
+async function deletePhoto(p) {
+  await deleteDoc(doc(db, COL.photos, p.id));
+  if (p.storagePath) { try { await deleteObject(ref(storage, p.storagePath)); } catch {} }
+  S.photos = S.photos.filter(x => x.id !== p.id);
+}
+
+/* ═════════════ AI ENGINE ═════════════ */
+const SYSTEM_PROMPT = `You are a senior UK solar PV and battery storage installation auditor. You judge installations against BS 7671 (18th Edition, current amendments), the IET Code of Practice for Grid-Connected Solar PV Systems, the IET Code of Practice for Electrical Energy Storage Systems, MCS standards (MIS 3002 / MCS 012), ENA G98/G99, manufacturers' installation instructions (MIs) and the installer's internal OES standards.
+You review photographic evidence uploaded by installers so that one auditor can supervise many jobs. Be strict but fair:
+- Only fail on things you can actually see, or on evidence that is clearly missing.
+- Never invent details that are not visible. If photos are blurry, dark, cropped, or do not show what the check requires, say the evidence is insufficient and state exactly which photo is needed.
+- Flag photos that appear to be photos of a screen or of another photo.
+- Paperwork checks (RAMS, risk assessments, EIC, commissioning sheets) may be evidenced by screenshots of forms: read them and check completeness, signatures, dates and that test values are within BS 7671 limits.
+- Use UK terminology (consumer unit, Henley block, cut-out, tails, PVDB, MCB, RCD/RCBO, isolator, gland, ferrule, bird mesh).
+Always respond with ONE valid JSON object and nothing else.`;
+
+const CODES_COMPACT = MASTER_CODES.map(c => `${c.val} | ${c.text.replace(/^CAT \d [A-Z0-9]+ - /,'')}`).join('\n');
+
+function jobContext(job) {
+  const e = peek(job,'q51')?.answer;
+  return [
+    `System type: ${job.systemType || 'unknown'}`,
+    job.panelCount || job.panelModel ? `Panels: ${job.panelCount || '?'} x ${job.panelModel || 'unspecified'}` : '',
+    job.inverter ? `Inverter: ${job.inverter}` : '',
+    job.battery ? `Battery: ${job.battery}` : '',
+    e ? `Earthing system recorded: ${e}` : '',
+    job.jobNotes ? `Job notes: ${job.jobNotes}` : ''
+  ].filter(Boolean).map(s => '- ' + s).join('\n');
+}
+
+function questionPrompt(q, job, photos) {
+  const isSelect = q.type === 'select';
+  const codes = (q.codes || []).map(c => `- ${c.val} (${CAT_LABEL[c.cat]}): ${c.text.replace(/^CAT \d [A-Z0-9]+ - /,'')} | Evidence required: ${c.action}`).join('\n');
+  return `JOB CONTEXT
+${jobContext(job) || '- (no details recorded)'}
+
+AUDIT CHECK #${q.num} — section "${q.section}" (${STAGES.find(s=>s.id===q.stage).label})
+"${q.text}"
+Answer options: ${q.options.join(' / ')}${isSelect ? '\nThis is a selection question: identify which option applies from the evidence (e.g. earthing arrangement from the cut-out / main earth). Use verdict "pass" when you can identify it, and put the option in recommendedAnswer.' : '\n"Yes" = the check is satisfied by the evidence. "No" = the check fails.' + (q.options.includes('N/A') ? ' "N/A" = not applicable to this install.' : '')}
+
+WHAT THE AUDIT TEAM REQUIRES
+${guidanceFor(q).map(g => '- ' + g).join('\n') || '- Clear photographic evidence of this item.'}
+${codes ? `\nCAT CODES NORMALLY RAISED FOR THIS CHECK (CAT 1 = safety fail, CAT 2 = policy fail, CAT 3/4 = pass with non-conformance)\n${codes}\n` : ''}
+OTHER CAT CODES (only use if clearly applicable)
+${CODES_COMPACT}
+
+You are given ${photos.length} photo(s), numbered 1 to ${photos.length} in the order supplied.
+
+Return JSON exactly in this shape:
+{
+  "verdict": "pass" | "fail" | "insufficient_evidence" | "not_applicable",
+  "recommendedAnswer": ${q.options.map(o => `"${o}"`).join(' | ')},
+  "confidence": number between 0 and 1,
+  "summary": "one or two sentences for the auditor",
+  "observations": ["what you can see, factual, short"],
+  "issues": [{"code": "CAT x - Eyy exactly as listed, or null", "severity": "safety" | "policy" | "minor", "description": "what is wrong and where", "photo": photo number or null}],
+  "missingEvidence": ["specific photos still needed"],
+  "photoQuality": {"adequate": true|false, "notes": "", "suspectedPhotoOfScreen": true|false},
+  "engineerAction": "plain-English instruction to the installer, or empty string"
+}
+Rules: "pass" only if the photos clearly show the requirement met. If you cannot confirm it, use "insufficient_evidence" and suggest CAT 3 - E35 (safety-critical photos) or CAT 4 - E53 (non-safety photos) where appropriate. Every "fail" must include at least one issue with a code.`;
+}
+
+function classifyPrompt(job) {
+  const list = visibleQs(job).map(q => `${q.id} [${q.section}] ${q.text}`).join('\n');
+  return `You are sorting site photos from a UK solar PV / battery installation into the audit checklist.
+JOB CONTEXT
+${jobContext(job) || '- (none)'}
+
+AUDIT CHECKLIST (id [section] check)
+${list}
+
+Look at the single photo supplied. Decide which checklist item(s) it is evidence for (max 3, most relevant first). Pre-install photos (before work starts) belong to "Pre Install"/"Site Investigation" items; finished work belongs to "Installation"/"EIC"/"PV Array Test"/"Additional Notes" items; screenshots of forms belong to the matching paperwork item.
+Return JSON: {"description": "short description of what the photo shows", "matches": [{"qId": "q24", "confidence": 0.0-1.0}], "concerns": "any obvious defect you notice, or empty string"}`;
+}
+
+function critiquePrompt(context, job) {
+  return `Critique this solar PV / battery installation from the photo(s) supplied, as an independent auditor would.
+${job ? 'JOB CONTEXT\n' + jobContext(job) + '\n' : ''}${context ? 'AUDITOR NOTE: ' + context + '\n' : ''}
+CAT CODES (CAT 1 = safety fail, CAT 2 = policy fail, CAT 3/4 = non-conformance)
+${CODES_COMPACT}
+
+AUDIT CHECKLIST IDS
+${QUESTIONS.map(q => `${q.id}: ${q.text}`).join('\n')}
+
+Return JSON:
+{
+  "overall": "good" | "minor_concerns" | "non_compliant" | "unsafe" | "unclear",
+  "confidence": 0-1,
+  "whatItShows": "short description of the photo(s)",
+  "summary": "2-3 sentence verdict",
+  "issues": [{"code": "CAT x - Eyy or null", "severity": "safety" | "policy" | "minor", "description": "", "recommendation": "", "photo": number or null}],
+  "goodPractice": ["things done well"],
+  "furtherEvidence": ["extra photos that would settle any doubt"],
+  "relatedChecks": ["q24"]
+}`;
+}
+
+let aiModelCache = null;
+async function callAI(prompt, images = []) {
+  const st = S.settings;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (st.provider === 'claude') {
+        const key = lsGet('as_claude_key'); if (!key) throw new Error('Add your Anthropic API key in Settings (stored on this device only).');
+        const content = images.map(d => ({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data:d } }));
+        content.push({ type:'text', text: prompt });
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{ 'content-type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+          body: JSON.stringify({ model: st.claudeModel, max_tokens: 3000, system: SYSTEM_PROMPT, messages:[{ role:'user', content }] })
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) { const err = new Error(j.error?.message || ('Claude API error ' + r.status)); err.status = r.status; throw err; }
+        return (j.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+      }
+      if (!aiModelCache || aiModelCache.name !== st.geminiModel) {
+        const m = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-ai.js`);
+        const ai = m.getAI(app, { backend: new m.GoogleAIBackend() });
+        aiModelCache = { name: st.geminiModel, model: m.getGenerativeModel(ai, {
+          model: st.geminiModel, systemInstruction: SYSTEM_PROMPT,
+          generationConfig: { responseMimeType:'application/json', temperature:0.2 }
+        }) };
+      }
+      const parts = [{ text: prompt }, ...images.map(d => ({ inlineData:{ mimeType:'image/jpeg', data:d } }))];
+      const res = await aiModelCache.model.generateContent(parts);
+      return res.response.text();
+    } catch (e) {
+      const msg = String(e.message || e);
+      const retry = e.status === 429 || e.status === 529 || /429|overloaded|RESOURCE_EXHAUSTED|503|UNAVAILABLE/i.test(msg);
+      if (retry && attempt < 2) { await sleep(2500 * (attempt + 1)); continue; }
+      throw e;
+    }
+  }
+}
+function parseJSON(t) {
+  t = String(t || '').replace(/^```(?:json)?/i, '').replace(/```$/,'').trim();
+  try { return JSON.parse(t); } catch {}
+  const m = t.match(/\{[\s\S]*\}/); if (m) { try { return JSON.parse(m[0]); } catch {} }
+  throw new Error('The AI returned an unreadable response.');
+}
+function aiErrorText(e) {
+  const m = String(e.message || e);
+  if (/api-not-enabled|firebasevertexai|firebaseml|AI Logic|PERMISSION_DENIED|403/i.test(m) && S.settings.provider !== 'claude')
+    return 'Firebase AI Logic is not enabled for this project. In the Firebase console open "AI Logic" → Get started → choose the Gemini Developer API. (' + m.slice(0,120) + ')';
+  if (/not found|404/i.test(m)) return 'AI model not found – check the model name in Settings. (' + m.slice(0,120) + ')';
+  return m.slice(0, 260);
+}
+
+function normaliseQ(r, q) {
+  const verdicts = ['pass','fail','insufficient_evidence','not_applicable'];
+  const out = {
+    verdict: verdicts.includes(r.verdict) ? r.verdict : 'insufficient_evidence',
+    recommendedAnswer: q.options.includes(r.recommendedAnswer) ? r.recommendedAnswer : '',
+    confidence: Math.max(0, Math.min(1, Number(r.confidence) || 0)),
+    summary: String(r.summary || ''),
+    observations: (Array.isArray(r.observations) ? r.observations : []).map(String).slice(0, 8),
+    issues: (Array.isArray(r.issues) ? r.issues : []).map(i => ({ code: matchCode(i.code), rawCode: i.code || null, severity: i.severity || 'minor', description: String(i.description || ''), photo: Number(i.photo) || null })).slice(0, 8),
+    missingEvidence: (Array.isArray(r.missingEvidence) ? r.missingEvidence : []).map(String).slice(0, 6),
+    photoQuality: { adequate: r.photoQuality?.adequate !== false, notes: String(r.photoQuality?.notes || ''), suspectedPhotoOfScreen: !!r.photoQuality?.suspectedPhotoOfScreen },
+    engineerAction: String(r.engineerAction || '')
+  };
+  if (!out.recommendedAnswer) out.recommendedAnswer = out.verdict === 'pass' ? (q.type === 'select' ? '' : 'Yes') : out.verdict === 'fail' ? (q.triggers || 'No') : out.verdict === 'not_applicable' && q.options.includes('N/A') ? 'N/A' : '';
+  return out;
+}
+
+/* Triage: confident passes are auto-accepted, everything else is queued for a human */
+function triage(q, a) {
+  if (a.review === 'human') return;          // never overwrite a human decision
+  const ai = a.ai, thr = Number(S.settings.autoAccept) || 0.85;
+  if (ai.photoQuality?.suspectedPhotoOfScreen) { a.review = 'needs'; return; }
+  if ((ai.verdict === 'pass' || ai.verdict === 'not_applicable') && ai.recommendedAnswer && ai.confidence >= thr) {
+    a.answer = ai.recommendedAnswer; a.codes = []; a.review = 'ai'; return;
+  }
+  if (ai.verdict === 'fail' && q.triggers) {
+    a.answer = q.triggers;
+    a.codes = [...new Set(ai.issues.map(i => i.code).filter(Boolean))];
+  }
+  a.review = 'needs';
+}
+
+async function aiCheckQuestion(qid, { quiet=false } = {}) {
+  const q = QMAP[qid], a = ans(qid);
+  const photos = photosFor(qid).slice(-Math.max(1, Number(S.settings.maxPhotos) || 6));
+  if (!photos.length) {
+    a.ai = { verdict:'insufficient_evidence', recommendedAnswer:'', confidence:1, summary:'No photos are attached to this check.', observations:[], issues:[], missingEvidence:guidanceFor(q), photoQuality:{adequate:false,notes:'',suspectedPhotoOfScreen:false}, engineerAction:'', at:Date.now(), model:'rule' };
+    if (a.review !== 'human') a.review = 'needs';
+    markDirty(qid); refreshCard(qid); return a.ai;
+  }
+  S.busy[qid] = true; refreshCard(qid);
+  try {
+    const text = await callAI(questionPrompt(q, S.job, photos), photos.map(p => p.img));
+    const r = normaliseQ(parseJSON(text), q);
+    a.ai = { ...r, at: Date.now(), model: S.settings.provider === 'claude' ? S.settings.claudeModel : S.settings.geminiModel, photoIds: photos.map(p => p.id) };
+    triage(q, a);
+    markDirty(qid);
+    return a.ai;
+  } catch (e) {
+    console.error(e); if (!quiet) toast(aiErrorText(e), 'err', 7000); throw e;
+  } finally { delete S.busy[qid]; refreshCard(qid); updateJobHeader(); }
+}
+
+async function pool(items, n, fn) {
+  let i = 0; const run = async () => { while (i < items.length && !S.cancel) { const k = i++; await fn(items[k], k); } };
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, run));
+}
+
+/* ═════════════ PROGRESS MODAL ═════════════ */
+function openProgress(title) {
+  S.cancel = false;
+  openModal({ title, body:`<div class="prog"><i id="progBar"></i></div><div class="row" style="margin-top:8px"><span id="progTxt" class="sub" style="margin:0">Starting…</span></div><div class="log" id="progLog"></div>`,
+    foot:`<button class="btn" data-act="cancelProg" id="progCancel">Stop</button><button class="btn dark hidden" data-act="closeModal" id="progDone">Done</button>` });
+}
+function prog(done, total, txt) { const b = $('#progBar'); if (b) b.style.width = (total ? done/total*100 : 0) + '%'; const t = $('#progTxt'); if (t) t.textContent = txt || `${done} / ${total}`; }
+function plog(line) { const l = $('#progLog'); if (l) { l.textContent += line + '\n'; l.scrollTop = l.scrollHeight; } }
+function progFinish(txt) { prog(1,1,txt); $('#progCancel')?.classList.add('hidden'); $('#progDone')?.classList.remove('hidden'); }
+
+/* ═════════════ VIEW: DASHBOARD ═════════════ */
+function renderDashboard() {
+  const jobs = S.jobs;
+  const needsJobs = jobs.filter(j => (j.needsReview || 0) > 0 && j.status !== 'Complete');
+  const completed = jobs.filter(j => j.status === 'Complete');
+  const safety = jobs.filter(j => j.outcome === 'safety').length;
+  const totAns = jobs.reduce((s,j) => s + (j.answeredQ || 0), 0);
+  const totAi = jobs.reduce((s,j) => s + (j.aiAccepted || 0), 0);
+  const aiPct = totAns ? Math.round(totAi / totAns * 100) : 0;
+  const sq = S.jobSearch.toLowerCase();
+  const list = jobs.filter(j => {
+    if (sq && ![j.jobNumber, j.customer, j.postcode, j.installer, j.address].some(v => String(v||'').toLowerCase().includes(sq))) return false;
+    if (S.jobOutcome && j.outcome !== S.jobOutcome) return false;
+    if (S.jobStatus === 'needs' && !((j.needsReview||0) > 0 && j.status !== 'Complete')) return false;
+    if (S.jobStatus === 'progress' && j.status === 'Complete') return false;
+    if (S.jobStatus === 'complete' && j.status !== 'Complete') return false;
+    return true;
+  });
+  $('#view-dashboard').innerHTML = `
+    <div class="row" style="margin-bottom:14px;align-items:flex-end">
+      <div><h1>Installation audits</h1><p class="sub" style="margin:0">Pre-install → installation → post-install. The AI clears the evidence it's confident about and sends the rest to an auditor.</p></div>
+      <div class="spacer"></div>
+      <button class="btn pri" data-act="newJob">${I.plus} New job</button>
+    </div>
+    <div class="stats">
+      <div class="card stat accent"><div class="k">Jobs</div><div class="v">${jobs.length}</div><div class="h">${jobs.length - completed.length} open · ${completed.length} complete</div></div>
+      <div class="card stat warn"><div class="k">Awaiting auditor</div><div class="v">${needsJobs.length}</div><div class="h">${jobs.reduce((s,j)=>s+((j.status!=='Complete'&&j.needsReview)||0),0)} checks flagged for review</div></div>
+      <div class="card stat aiacc"><div class="k">Cleared by AI</div><div class="v">${aiPct}%</div><div class="h">${totAi} of ${totAns} answered checks</div></div>
+      <div class="card stat bad"><div class="k">Safety fails</div><div class="v">${safety}</div><div class="h">Jobs with a CAT 1 code</div></div>
+    </div>
+    <div class="filters">
+      <input type="search" placeholder="Search job number, customer, postcode, installer…" value="${esc(S.jobSearch)}" data-on="jobSearch">
+      <select data-on="jobStatus">
+        <option value="">All statuses</option>
+        <option value="needs" ${S.jobStatus==='needs'?'selected':''}>Awaiting auditor review</option>
+        <option value="progress" ${S.jobStatus==='progress'?'selected':''}>In progress</option>
+        <option value="complete" ${S.jobStatus==='complete'?'selected':''}>Complete</option>
+      </select>
+      <select data-on="jobOutcome">
+        <option value="">All outcomes</option>
+        ${[['pass','Pass'],['pnc','PNC'],['policy','Policy fail'],['safety','Safety fail']].map(([v,l]) => `<option value="${v}" ${S.jobOutcome===v?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    ${list.length ? `<div class="jobs">${list.map(jobCard).join('')}</div>` : `<div class="card empty">${jobs.length ? 'No jobs match these filters.' : 'No jobs yet. Create one to start auditing.'}</div>`}`;
+}
+function jobCard(j) {
+  const sp = j.stageProgress || {};
+  return `<div class="card job" data-act="openJob" data-id="${j.id}">
+    <div class="row"><span class="jn">#${esc(j.jobNumber)}</span><div class="spacer"></div>${j.status === 'Complete' ? '<span class="pill o-info">Complete</span>' : ''}${outcomePill(j.answeredQ ? j.outcome : '', j.answeredQ ? (j.outcome === 'pnc' ? 'PNC' : j.outcomeLabel) : 'Not started')}</div>
+    <div style="font-weight:600;margin-top:4px">${esc(j.customer || 'Customer not set')}</div>
+    <div class="meta">${esc([j.postcode, j.installer, j.systemType].filter(Boolean).join(' · ') || '—')}</div>
+    <div class="meta">Install ${fmtDate(j.installDate)} · updated ${fmtDT(j.updatedAt)}</div>
+    <div class="mini-stages">${STAGES.map(s => { const p = sp[s.id] || {answered:0,total:0}; const pc = p.total ? Math.round(p.answered/p.total*100) : 0; return `<div>${s.label} ${pc}%<div class="bar"><i style="width:${pc}%"></i></div></div>`; }).join('')}</div>
+    ${(j.needsReview && j.status !== 'Complete') ? `<div style="margin-top:8px"><span class="pill o-needs">${j.needsReview} check${j.needsReview>1?'s':''} need review</span> ${j.aiAccepted ? `<span class="pill o-ai">${j.aiAccepted} AI-cleared</span>` : ''}</div>` : (j.aiAccepted ? `<div style="margin-top:8px"><span class="pill o-ai">${j.aiAccepted} AI-cleared</span></div>` : '')}
+  </div>`;
+}
+
+function jobForm(j = {}) {
+  const f = (k, label, type='text', extra='') => `<label class="f">${label}<input type="${type}" name="${k}" value="${esc(j[k] ?? '')}" ${extra}></label>`;
+  return `<form id="jobForm" class="form" onsubmit="return false">
+    ${f('jobNumber','Job number *','text','required')}
+    ${f('installDate','Install date','date')}
+    ${f('customer','Customer name')}
+    ${f('postcode','Postcode')}
+    <label class="f full">Address<input name="address" value="${esc(j.address||'')}"></label>
+    ${f('installer','Installer / team')}
+    <label class="f">System type<select name="systemType">${['PV + Battery','PV only','Battery only'].map(o => `<option ${j.systemType===o?'selected':''}>${o}</option>`).join('')}</select></label>
+    ${f('panelCount','No. of panels','number','min="0"')}
+    ${f('panelModel','Panel model')}
+    ${f('inverter','Inverter (make / size)')}
+    ${f('battery','Battery (make / kWh)')}
+    <label class="f full">Design notes / anything the AI should know<textarea name="jobNotes" rows="2">${esc(j.jobNotes||'')}</textarea><span class="hint">e.g. "2 arrays: front 8 panels, rear 4. Bonding required per OES-TBT-119."</span></label>
+  </form>`;
+}
+function readJobForm() {
+  const fd = new FormData($('#jobForm')); const o = {};
+  fd.forEach((v,k) => o[k] = String(v).trim());
+  return o;
+}
+
+/* ═════════════ VIEW: JOB / AUDIT ═════════════ */
+async function openJob(id) {
+  const j = S.jobs.find(x => x.id === id);
+  if (!j) { toast('Job not found', 'err'); return; }
+  S.job = JSON.parse(JSON.stringify(j)); S.photos = []; S.filter = 'all'; S.stage = S.stage || 'pre';
+  S.dirty.clear(); S.dirtyMeta = false;
+  showView('job');
+  $('#view-job').innerHTML = '<div class="empty"><span class="spin"></span> Loading job…</div>';
+  try { await loadPhotos(id); } catch (e) { toast('Could not load photos: ' + (e.code || e.message), 'err'); }
+  renderJob();
+}
+
+function renderJob() {
+  const j = S.job; if (!j) { $('#view-job').innerHTML = '<div class="empty">No job open.</div>'; return; }
+  const unsorted = S.photos.filter(p => !(p.qIds || []).length);
+  $('#view-job').innerHTML = `
+    <div class="row" style="margin-bottom:10px"><button class="btn ghost sm" data-act="nav" data-view="dashboard">${I.back} All jobs</button><div class="spacer"></div><span class="save-ind" id="saveInd">${j.updatedAt ? 'Saved ' + fmtDT(j.updatedAt) : ''}</span></div>
+    <div class="card jhead" id="jhead"></div>
+    <div class="stage-tabs" id="stageTabs"></div>
+    <div class="toolbar">
+      <div class="chips" id="filterChips"></div>
+      <div class="spacer"></div>
+      ${unsorted.length ? `<button class="btn sm" data-act="viewUnsorted">${unsorted.length} unsorted photo${unsorted.length>1?'s':''}</button>` : ''}
+      <button class="btn ai-o sm" data-act="runAll" data-scope="stage">${I.ai} AI check this stage</button>
+    </div>
+    <div id="qlist"></div>`;
+  updateJobHeader(); renderQuestions();
+}
+
+function updateJobHeader() {
+  const j = S.job; if (!j || !$('#jhead')) return;
+  const sum = summarise(j); const o = computeOutcome(j);
+  $('#jhead').innerHTML = `
+    <div class="top-line">
+      <div><div class="jn">#${esc(j.jobNumber)}</div><div style="font-weight:600">${esc(j.customer || '')}${j.postcode ? ' · ' + esc(j.postcode) : ''}</div></div>
+      <div class="spacer"></div>
+      <div class="row">
+        <button class="btn sm" data-act="editJob">Edit details</button>
+        <button class="btn ai sm" data-act="bulkUpload">${I.stack} Drop site photos (AI sorts)</button>
+        <button class="btn ai-o sm" data-act="runAll" data-scope="job">${I.ai} AI check whole job</button>
+        <button class="btn dark sm" data-act="report">${I.doc} Report</button>
+      </div>
+    </div>
+    <div class="kv">
+      <div><b>System</b>${esc(j.systemType || '—')}</div>
+      <div><b>Panels</b>${esc([j.panelCount, j.panelModel].filter(Boolean).join(' × ') || '—')}</div>
+      <div><b>Inverter</b>${esc(j.inverter || '—')}</div>
+      <div><b>Battery</b>${esc(j.battery || '—')}</div>
+      <div><b>Installer</b>${esc(j.installer || '—')}</div>
+      <div><b>Install date</b>${fmtDate(j.installDate)}</div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="outcome-box o-${sum.answeredQ ? o.key : 'none'}">${esc(sum.answeredQ ? o.label : 'Not started')}</div>
+      <span class="pill o-info">${sum.answeredQ}/${sum.totalQ} answered</span>
+      <span class="pill o-ai">${sum.aiAccepted} AI-cleared</span>
+      <span class="pill o-needs">${sum.needsReview} need review</span>
+      <span class="pill o-none">${sum.humanVerified} auditor-verified</span>
+      <div class="spacer"></div>
+      ${j.status === 'Complete' ? `<span class="pill o-info">Audit complete · ${esc(j.completedBy||'')} ${fmtDate(j.completedAt)}</span> <button class="btn sm" data-act="reopen">Reopen</button>` : `<button class="btn ok sm" data-act="completeAudit">${I.check} Complete audit</button>`}
+    </div>`;
+  $('#stageTabs').innerHTML = STAGES.map(s => {
+    const p = sum.stageProgress[s.id];
+    return `<button class="stage-tab ${S.stage===s.id?'on':''}" data-act="stage" data-stage="${s.id}">
+      <div class="t">${s.label}<span class="cnt">${p.answered}/${p.total}</span></div>
+      <div class="s">${s.sub}</div>
+      <div class="bar"><i style="width:${p.total ? p.answered/p.total*100 : 0}%"></i></div>
+      ${p.needs ? `<div style="margin-top:5px"><span class="pill o-needs">${p.needs} to review</span></div>` : ''}
+    </button>`;
+  }).join('');
+  const qs = visibleQs(j, S.stage);
+  const counts = { all: qs.length, needs: qs.filter(q => reviewState(q)==='needs').length, unanswered: qs.filter(q => !peek(j,q.id)?.answer).length, fails: qs.filter(q => isFail(q)).length, nophoto: qs.filter(q => !photosFor(q.id).length).length };
+  $('#filterChips').innerHTML = [['all','All'],['needs','Needs review'],['unanswered','Unanswered'],['fails','Fails'],['nophoto','No photos']]
+    .map(([k,l]) => `<button class="chip ${S.filter===k?'on':''}" data-act="filter" data-f="${k}">${l} (${counts[k]})</button>`).join('');
+}
+
+function renderQuestions() {
+  const j = S.job;
+  let html = '';
+  SECTIONS.filter(s => s.stage === S.stage).forEach(sec => {
+    const items = sec.items.filter(q => !isHidden(q) && passFilter(q));
+    if (!items.length) return;
+    html += `<div class="sec-title">${esc(sec.title)}</div>` + items.map(cardHTML).join('');
+  });
+  $('#qlist').innerHTML = html || `<div class="card empty">Nothing here for this filter.</div>`;
+}
+function passFilter(q) {
+  const j = S.job;
+  switch (S.filter) {
+    case 'needs': return reviewState(q) === 'needs';
+    case 'unanswered': return !peek(j,q.id)?.answer;
+    case 'fails': return isFail(q);
+    case 'nophoto': return !photosFor(q.id).length;
+    default: return true;
+  }
+}
+function refreshCard(qid) {
+  const el = document.getElementById('qc_' + qid);
+  if (el) el.outerHTML = cardHTML(QMAP[qid]);
+}
+
+function cardHTML(q) {
+  const j = S.job, a = peek(j, q.id) || { answer:'', codes:[], notes:'' };
+  const st = reviewState(q); const fail = isFail(q); const ph = photosFor(q.id); const busy = S.busy[q.id];
+  const stLabel = { needs:'<span class="pill o-needs">Needs review</span>', ai:'<span class="pill o-ai">AI-cleared</span>', human:'<span class="pill o-pass">Verified</span>', open:'' }[st];
+  const ansHTML = q.type === 'select'
+    ? `<select data-on="selAnswer" data-q="${q.id}"><option value="">Select…</option>${q.options.map(o => `<option ${a.answer===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`
+    : q.options.map(o => `<button class="${a.answer===o?'on':''} v-${o.replace('/','')}" data-act="answer" data-q="${q.id}" data-v="${esc(o)}">${esc(o)}</button>`).join('');
+  return `<div class="card q st-${st} ${fail?'is-fail':''}" id="qc_${q.id}">
+    <div class="qtop"><div class="qnum">${q.num}</div><div class="qtext">${esc(q.text)}</div>${stLabel}</div>
+    <div class="ans">${ansHTML}</div>
+    <div class="qbody">
+      <div class="photos">
+        ${ph.map((p,i) => `<div class="thumb" data-act="viewPhoto" data-id="${p.id}" title="${esc(p.description || p.name || '')}"><img src="${imgSrc(p)}" alt="Evidence photo ${i+1}" loading="lazy"><span class="ix">${i+1}</span></div>`).join('')}
+        <div class="add-ph" data-act="camera" data-q="${q.id}" title="Take photo">${I.cam}</div>
+        <div class="add-ph" data-act="pick" data-q="${q.id}" title="Upload photos">${I.up}</div>
+        <button class="btn ai-o sm" data-act="aiCheck" data-q="${q.id}" ${busy?'disabled':''}>${busy ? '<span class="spin"></span> Checking…' : I.ai + (a.ai ? ' Re-check' : ' AI check')}</button>
+      </div>
+      ${a.ai ? aiPanel(q, a) : ''}
+      ${fail ? codesPanel(q, a) : ''}
+      <textarea class="notes" rows="1" placeholder="Auditor notes…" data-on="notes" data-q="${q.id}">${esc(a.notes || '')}</textarea>
+      <div class="qfoot">
+        ${a.by ? `Last set by ${esc(a.by)} · ${fmtDT(a.at)}` : (st==='ai' ? 'Answer set automatically from AI evidence check' : '')}
+        <div class="spacer"></div>
+        ${(st === 'needs' || st === 'ai') && a.answer ? `<button class="btn sm" data-act="verify" data-q="${q.id}">${I.check} Confirm</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function aiPanel(q, a) {
+  const ai = a.ai; const vlabel = { pass:'Meets requirement', fail:'Defect found', insufficient_evidence:'Insufficient evidence', not_applicable:'Not applicable' }[ai.verdict];
+  const pc = Math.round((ai.confidence || 0) * 100);
+  const canApply = ai.model !== 'rule' && (ai.recommendedAnswer && a.answer !== ai.recommendedAnswer || ai.issues.some(i => i.code && !(a.codes||[]).includes(i.code)));
+  return `<div class="aip">
+    <div class="h">${I.ai.replace('<svg','<svg width="14" height="14"')} AI review <span class="pill v-${ai.verdict}">${vlabel}</span>
+      ${ai.model !== 'rule' ? `<span class="conf">${pc}% <span class="bar"><i style="width:${pc}%"></i></span></span>` : ''}
+      ${ai.recommendedAnswer ? `<span class="pill o-none">Suggests: ${esc(ai.recommendedAnswer)}</span>` : ''}
+      ${ai.photoQuality?.suspectedPhotoOfScreen ? '<span class="pill o-safety">Possible photo of a screen</span>' : ''}
+    </div>
+    ${ai.summary ? `<div class="sum">${esc(ai.summary)}</div>` : ''}
+    ${ai.observations?.length ? `<ul>${ai.observations.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : ''}
+    ${ai.issues?.map(i => `<div class="issue sev-${esc(i.severity)}"><div style="flex:1">${i.code ? `<span class="code cat${CODE_MAP[i.code]?.cat}">${esc(i.code)}</span> ` : ''}${esc(i.description)}${i.photo ? ` <span class="pill o-none">photo ${i.photo}</span>` : ''}</div>${i.code && !(a.codes||[]).includes(i.code) ? `<button class="btn sm" data-act="applyCode" data-q="${q.id}" data-code="${esc(i.code)}">Apply</button>` : ''}</div>`).join('') || ''}
+    ${ai.missingEvidence?.length ? `<div class="guidance"><b>Evidence still needed:</b> ${ai.missingEvidence.map(esc).join(' · ')}</div>` : ''}
+    ${!ai.photoQuality?.adequate && ai.photoQuality?.notes ? `<div class="guidance">Photo quality: ${esc(ai.photoQuality.notes)}</div>` : ''}
+    ${ai.engineerAction ? `<div style="margin-top:6px;font-size:13px"><b>Installer action:</b> ${esc(ai.engineerAction)}</div>` : ''}
+    <div class="qfoot"><span>${esc(ai.model)} · ${fmtDT(ai.at)}</span><div class="spacer"></div>${canApply ? `<button class="btn ai sm" data-act="acceptAi" data-q="${q.id}">${I.check} Accept AI finding</button>` : ''}</div>
+  </div>`;
+}
+
+function codesPanel(q, a) {
+  const aiCodes = new Set((a.ai?.issues || []).map(i => i.code).filter(Boolean));
+  const opts = [...(q.codes || [])];
+  (a.codes || []).forEach(c => { if (!opts.find(o => o.val === c) && CODE_MAP[c]) opts.push(CODE_MAP[c]); });
+  const others = MASTER_CODES.filter(c => !opts.find(o => o.val === c.val));
+  return `<div class="codes">
+    ${opts.length ? `<h4>CAT codes</h4>${opts.map(c => `<label class="code-opt"><input type="checkbox" data-on="code" data-q="${q.id}" value="${esc(c.val)}" ${(a.codes||[]).includes(c.val)?'checked':''}>
+      <span><b class="cat${c.cat}">${esc(c.val)}</b> ${esc(c.text.replace(/^CAT \d [A-Z0-9]+ - /,''))} ${aiCodes.has(c.val) ? '<span class="pill o-ai">AI</span>' : ''}<span class="act">${esc(c.action)}</span></span></label>`).join('')}
+    <label class="code-opt"><select data-on="addCode" data-q="${q.id}" class="btn sm" style="font-weight:500"><option value="">+ Add another CAT code…</option>${others.map(c => `<option value="${esc(c.val)}">${esc(c.text)}</option>`).join('')}</select></label>` : ''}
+    ${q.ifNoAction ? `<div class="guidance"><b>Action:</b> ${esc(q.ifNoAction)}</div>` : ''}
+  </div>`;
+}
+
+/* Answer changes by a human */
+function setAnswer(qid, val) {
+  const q = QMAP[qid], a = ans(qid);
+  a.answer = a.answer === val ? '' : val;
+  if (a.answer !== q.triggers) a.codes = [];
+  else if (!a.codes.length && a.ai?.issues?.length) a.codes = [...new Set(a.ai.issues.map(i => i.code).filter(Boolean))];
+  a.review = a.answer ? 'human' : ''; a.by = auditorName(); a.at = Date.now();
+  markDirty(qid);
+  if (qid === 'q4') { renderQuestions(); } else refreshCard(qid);
+  updateJobHeader();
+}
+
+/* ═════════════ PHOTO CAPTURE ═════════════ */
+async function handleFiles(files, qid) {
+  files = [...files].filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|heic|webp)$/i.test(f.name));
+  if (!files.length || !S.job) return;
+  const jobId = S.job.id; let ok = 0;
+  toast(`Uploading ${files.length} photo${files.length>1?'s':''}…`);
+  for (const f of files) {
+    try { await addPhotoToJob(jobId, f, qid ? [qid] : []); ok++; refreshCard(qid); }
+    catch (e) { console.error(e); toast('Photo failed: ' + (e.code || e.message), 'err'); }
+  }
+  if (ok) toast(`${ok} photo${ok>1?'s':''} saved`, 'ok');
+  updateJobHeader();
+  if (qid && ok && lsGet('as_autocheck') !== 'off') aiCheckQuestion(qid).catch(()=>{});
+}
+
+let camStream = null;
+async function openCamera(onShots) {
+  if (!navigator.mediaDevices?.getUserMedia) { $('#pickCamera').click(); return; }
+  const shots = [];
+  openModal({ title:'Camera', body:`<video class="cam" id="camVideo" autoplay playsinline muted></video>
+      <div class="photos" id="camShots"></div>`,
+    foot:`<button class="btn" data-act="camSwitch">Switch camera</button><div class="spacer"></div><button class="btn pri" data-act="camShoot">${I.cam} Capture</button><button class="btn dark" data-act="camDone">Use photos</button>`,
+    onClose: () => { stopCam(); } });
+  S.cam = { shots, onShots, facing:'environment' };
+  await startCam();
+}
+async function startCam() {
+  stopCam();
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode: S.cam.facing, width:{ ideal:1920 }, height:{ ideal:1440 } }, audio:false });
+    $('#camVideo').srcObject = camStream;
+  } catch (e) { closeModal(); toast('Camera unavailable – opening file picker instead.'); $('#pickCamera').click(); }
+}
+function stopCam() { if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; } }
+async function camShoot() {
+  const v = $('#camVideo'); if (!v || !v.videoWidth) return;
+  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+  const file = new File([blob], `camera_${Date.now()}.jpg`, { type:'image/jpeg' });
+  S.cam.shots.push(file);
+  $('#camShots').insertAdjacentHTML('beforeend', `<div class="thumb"><img src="${c.toDataURL('image/jpeg',0.5)}"><span class="ix">${S.cam.shots.length}</span></div>`);
+}
+
+/* ═════════════ PHOTO VIEWER ═════════════ */
+function viewPhoto(pid) {
+  const p = S.photos.find(x => x.id === pid); if (!p) return;
+  const tags = (p.qIds || []).map(id => QMAP[id] ? `<span class="tag">#${QMAP[id].num} ${esc(QMAP[id].text.slice(0,40))}<button data-act="untag" data-id="${p.id}" data-q="${id}" title="Remove">×</button></span>` : '').join('');
+  openModal({ title:'Evidence photo', wide:true, body:`
+    <img class="lb-img" src="${p.url || imgSrc(p)}" alt="">
+    ${p.description ? `<p style="margin:10px 0 4px"><b>AI description:</b> ${esc(p.description)}</p>` : ''}
+    ${p.concerns ? `<div class="guidance">${esc(p.concerns)}</div>` : ''}
+    <p class="sub" style="margin:8px 0">${esc(p.name || '')} · uploaded ${fmtDT(p.uploadedAt)} by ${esc(p.uploadedBy || '—')}</p>
+    <div><b style="font-size:13px">Evidence for:</b> ${tags || '<span class="sub">Not assigned to a check</span>'}</div>
+    <div class="row" style="margin-top:8px"><select class="btn sm" data-on="tagPhoto" data-id="${p.id}" style="font-weight:500;max-width:100%"><option value="">+ Assign to check…</option>
+      ${SECTIONS.map(s => `<optgroup label="${esc(s.title)}">${s.items.filter(q => !isHidden(q)).map(q => `<option value="${q.id}">#${q.num} ${esc(q.text)}</option>`).join('')}</optgroup>`).join('')}</select></div>`,
+    foot:`<button class="btn danger" data-act="delPhoto" data-id="${p.id}">Delete photo</button><div class="spacer"></div>${p.url ? `<a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener">Open full size</a>` : ''}<button class="btn dark" data-act="closeModal">Close</button>` });
+}
+
+function viewUnsorted() {
+  const list = S.photos.filter(p => !(p.qIds || []).length);
+  openModal({ title:`Unsorted photos (${list.length})`, wide:true, body: list.length ? `<p class="sub">Click a photo to assign it to a check.</p><div class="photos">${list.map(p => `<div class="thumb" style="width:110px;height:110px" data-act="viewPhoto" data-id="${p.id}"><img src="${imgSrc(p)}"></div>`).join('')}</div>` : '<div class="empty">All photos are assigned.</div>' });
+}
+
+/* ═════════════ BULK: AI SORT PHOTOS ═════════════ */
+function bulkUploadModal() {
+  openModal({ title:'Drop site photos – AI sorts them', body:`
+    <p class="sub">Add every photo from the job at once (pre-install, install, testing, paperwork screenshots). The AI matches each photo to the right audit check, then you can run the evidence check across the whole job.</p>
+    <div class="drop" id="bulkDrop" data-act="bulkPick">${I.up.replace('<svg','<svg width="34" height="34"')}<div style="font-weight:700;margin-top:6px;color:var(--ink)">Drop photos here or click to choose</div><div>JPG / PNG · any number</div></div>
+    <label class="row" style="margin-top:12px;font-size:14px"><input type="checkbox" id="bulkThenCheck" checked> Run the AI evidence check on all affected checks afterwards</label>`,
+    foot:`<button class="btn" data-act="closeModal">Cancel</button>` });
+  const d = $('#bulkDrop');
+  d.addEventListener('dragover', e => { e.preventDefault(); d.classList.add('over'); });
+  d.addEventListener('dragleave', () => d.classList.remove('over'));
+  d.addEventListener('drop', e => { e.preventDefault(); d.classList.remove('over'); runBulk([...e.dataTransfer.files]); });
+}
+async function runBulk(files) {
+  files = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(f.name));
+  if (!files.length) return;
+  const thenCheck = $('#bulkThenCheck')?.checked;
+  const job = S.job; const touched = new Set(); let done = 0;
+  openProgress(`Sorting ${files.length} photos`);
+  const prompt = classifyPrompt(job);
+  await pool(files, 3, async (f) => {
+    try {
+      const p = await addPhotoToJob(job.id, f, []);
+      try {
+        const r = parseJSON(await callAI(prompt, [p.img]));
+        const matches = (r.matches || []).filter(m => QMAP[m.qId] && (Number(m.confidence) || 0) >= 0.45).slice(0, 3);
+        p.qIds = matches.map(m => m.qId); p.description = String(r.description || ''); p.concerns = String(r.concerns || '');
+        await updateDoc(doc(db, COL.photos, p.id), { qIds:p.qIds, description:p.description, concerns:p.concerns, classifiedAt:Date.now() });
+        p.qIds.forEach(id => touched.add(id));
+        plog(`✓ ${f.name} → ${p.qIds.length ? p.qIds.map(id => '#' + QMAP[id].num).join(', ') : 'unsorted'}  ${p.description.slice(0,70)}`);
+      } catch (e) { plog(`! ${f.name}: saved but not sorted (${aiErrorText(e).slice(0,90)})`); }
+    } catch (e) { plog(`✗ ${f.name}: upload failed (${e.code || e.message})`); }
+    prog(++done, files.length, `Sorted ${done} of ${files.length}`);
+  });
+  renderJob();
+  if (thenCheck && touched.size && !S.cancel) { await runChecks([...touched], 'Checking evidence'); }
+  else progFinish(`Done – ${touched.size} checks received photos.`);
+}
+
+async function runChecks(qids, title) {
+  if (!$('#progBar')) openProgress(title); else { S.cancel = false; $('#progCancel')?.classList.remove('hidden'); $('#progDone')?.classList.add('hidden'); }
+  let done = 0, failed = 0;
+  plog(`— ${title}: ${qids.length} checks —`);
+  await pool(qids, 2, async (qid) => {
+    const q = QMAP[qid];
+    try {
+      const r = await aiCheckQuestion(qid, { quiet:true });
+      const a = peek(S.job, qid);
+      plog(`#${q.num} ${r.verdict.toUpperCase()} ${r.model==='rule'?'':'('+Math.round(r.confidence*100)+'%)'} → ${a.review === 'ai' ? 'auto-cleared' : 'auditor review'}`);
+    } catch (e) { failed++; plog(`#${q.num} error: ${aiErrorText(e).slice(0,110)}`); }
+    prog(++done, qids.length, `${done} / ${qids.length} checked`);
+  });
+  renderJob();
+  const sum = summarise(S.job);
+  progFinish(`${S.cancel ? 'Stopped. ' : ''}${sum.aiAccepted} cleared by AI · ${sum.needsReview} need an auditor${failed ? ` · ${failed} errors` : ''}`);
+}
+
+/* ═════════════ REPORT ═════════════ */
+function reportHTML() {
+  const j = S.job, sum = summarise(j), o = computeOutcome(j);
+  const actions = [];
+  let rows = '';
+  SECTIONS.forEach(sec => {
+    const items = sec.items.filter(q => !isHidden(q)); if (!items.length) return;
+    rows += `<tr><td colspan="5" style="background:#f3f4f0;font-weight:700">${esc(sec.title)}</td></tr>`;
+    items.forEach(q => {
+      const a = peek(j, q.id) || {}; const st = reviewState(q);
+      (a.codes || []).forEach(c => actions.push({ q, c: CODE_MAP[c] || { val:c, text:c, action:'' } }));
+      if (isFail(q) && q.ifNoAction && !(a.codes||[]).length) actions.push({ q, c:{ val:'Action', text:q.text, action:q.ifNoAction, cat:'' } });
+      rows += `<tr><td>${q.num}</td><td>${esc(q.text)}${a.notes ? `<div class="sub" style="margin:2px 0 0">${esc(a.notes)}</div>` : ''}</td>
+        <td class="ans-${esc(a.answer)}">${esc(a.answer || '—')}</td>
+        <td>${(a.codes||[]).map(c => `<div class="cat${CODE_MAP[c]?.cat}" style="font-family:var(--mono);font-size:12px">${esc(c)}</div>`).join('')}</td>
+        <td style="font-size:12px">${{ai:'AI', human:'Auditor', needs:'Pending', open:'—'}[st]}</td></tr>`;
+    });
+  });
+  const failPhotos = visibleQs(j).filter(q => isFail(q) && photosFor(q.id).length);
+  const w = j.aiWriteup;
+  return `<div class="report">
+    <div class="r-head"><div><div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">${esc(S.settings.companyName)} · Installation audit report</div>
+      <div style="font-size:22px;font-weight:800;font-family:var(--mono)">Job #${esc(j.jobNumber)}</div>
+      <div>${esc([j.customer, j.address, j.postcode].filter(Boolean).join(', '))}</div></div>
+      <div style="text-align:right"><div class="outcome-box o-${o.key}" style="display:inline-flex">${esc(o.label)}</div><div class="sub" style="margin:6px 0 0">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}<br>Auditor: ${esc(j.completedBy || auditorName())}</div></div></div>
+    <div class="kv" style="margin-bottom:12px">
+      <div><b>System</b>${esc(j.systemType||'—')}</div><div><b>Installer</b>${esc(j.installer||'—')}</div><div><b>Install date</b>${fmtDate(j.installDate)}</div>
+      <div><b>Checks answered</b>${sum.answeredQ}/${sum.totalQ}</div><div><b>AI-cleared</b>${sum.aiAccepted}</div><div><b>Auditor-verified</b>${sum.humanVerified}</div>
+    </div>
+    ${w ? `<h3>Summary</h3><p>${esc(w.summary)}</p>${w.keyFindings?.length ? `<ul>${w.keyFindings.map(k=>`<li>${esc(k)}</li>`).join('')}</ul>` : ''}${w.engineerFeedback ? `<p><b>Feedback for the installer:</b> ${esc(w.engineerFeedback)}</p>` : ''}` : ''}
+    <h3>Actions required (${actions.length})</h3>
+    ${actions.length ? `<table><tr><th>#</th><th>Check</th><th>Code</th><th>Required action</th></tr>${actions.map(x => `<tr><td>${x.q.num}</td><td>${esc(x.q.text)}</td><td class="cat${x.c.cat}" style="font-family:var(--mono);font-size:12px;white-space:nowrap">${esc(x.c.val)}</td><td>${esc(x.c.action)}</td></tr>`).join('')}</table>` : '<p>No actions – all checks passed.</p>'}
+    ${failPhotos.length ? `<h3>Evidence for failed checks</h3>${failPhotos.map(q => `<div style="margin-bottom:10px"><b>#${q.num} ${esc(q.text)}</b><div class="ph-grid">${photosFor(q.id).slice(0,6).map(p => `<img src="${imgSrc(p)}">`).join('')}</div></div>`).join('')}` : ''}
+    <h3>Full checklist</h3>
+    <table><tr><th>#</th><th>Check</th><th>Answer</th><th>Codes</th><th>By</th></tr>${rows}</table>
+  </div>`;
+}
+function openReport() {
+  openModal({ title:'Audit report', wide:true, body:`<div id="reportBody">${reportHTML()}</div>`,
+    foot:`<button class="btn ai-o" data-act="aiWriteup">${I.ai} ${S.job.aiWriteup ? 'Rewrite' : 'Write'} AI summary</button><div class="spacer"></div><button class="btn" data-act="emailReport">${I.mail} Email</button><button class="btn dark" data-act="printReport">Print / save PDF</button>` });
+}
+async function aiWriteup(btn) {
+  const j = S.job;
+  const lines = visibleQs(j).map(q => { const a = peek(j,q.id) || {}; if (!a.answer && !a.ai) return null;
+    return `#${q.num} ${q.text}: ${a.answer || 'unanswered'}${a.codes?.length ? ' [' + a.codes.join(', ') + ']' : ''}${a.ai?.summary ? ' — AI: ' + a.ai.summary : ''}${a.notes ? ' — notes: ' + a.notes : ''}`; }).filter(Boolean);
+  if (!lines.length) { toast('Answer some checks first.'); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Writing…';
+  try {
+    const r = parseJSON(await callAI(`Write the summary section of a solar installation audit report for job #${j.jobNumber}.
+JOB CONTEXT
+${jobContext(j)}
+OUTCOME: ${computeOutcome(j).label}
+CHECK RESULTS
+${lines.join('\n')}
+
+Return JSON: {"summary": "3-5 sentences, factual, for the operations manager", "keyFindings": ["most important issues first, max 6"], "engineerFeedback": "constructive feedback to the installer in 2-3 sentences"}`));
+    j.aiWriteup = { summary:String(r.summary||''), keyFindings:(r.keyFindings||[]).map(String), engineerFeedback:String(r.engineerFeedback||''), at:Date.now() };
+    markDirty(); $('#reportBody').innerHTML = reportHTML(); btn.innerHTML = I.ai + ' Rewrite AI summary';
+  } catch (e) { toast(aiErrorText(e), 'err', 7000); btn.innerHTML = I.ai + ' Write AI summary'; }
+  btn.disabled = false;
+}
+function printReport() {
+  $('#printArea').innerHTML = reportHTML(); document.body.classList.add('print-report');
+  setTimeout(() => { window.print(); document.body.classList.remove('print-report'); }, 100);
+}
+function emailReport() {
+  const j = S.job, o = computeOutcome(j);
+  const items = [];
+  visibleQs(j).forEach(q => { const a = peek(j,q.id); if (!a) return;
+    (a.codes||[]).forEach(c => items.push(`• #${q.num} ${q.text}\n   ${c}: ${CODE_MAP[c]?.action || ''}`));
+    if (isFail(q) && !(a.codes||[]).length && q.ifNoAction) items.push(`• #${q.num} ${q.text}\n   ${q.ifNoAction}`);
+  });
+  const body = `Job #${j.jobNumber} – ${j.customer || ''} ${j.postcode || ''}\nOutcome: ${o.label}\n\n${j.aiWriteup?.summary ? j.aiWriteup.summary + '\n\n' : ''}${items.length ? 'Actions required:\n' + items.join('\n') : 'No actions required.'}\n\nAudited by ${auditorName()} using ${S.settings.companyName}.`;
+  const url = `mailto:${encodeURIComponent(S.settings.reportEmail || '')}?subject=${encodeURIComponent(`Audit result – Job #${j.jobNumber} – ${o.label}`)}&body=${encodeURIComponent(body.slice(0, 1800))}`;
+  window.location.href = url;
+}
+
+/* ═════════════ VIEW: AI INSPECTOR ═════════════ */
+function renderInspector(soft) {
+  if (soft && S.view !== 'inspector') return;
+  const ins = S.ins;
+  const jobOpts = S.jobs.map(j => `<option value="${j.id}" ${ins.jobId===j.id?'selected':''}>#${esc(j.jobNumber)} ${esc(j.customer||'')}</option>`).join('');
+  $('#view-inspector').innerHTML = `
+    <h1>AI Inspector</h1><p class="sub">Snap or upload any part of an installation and get an instant critique against the audit standards and CAT codes.</p>
+    <div class="ins-grid">
+      <div class="card pad">
+        <h3>Photos</h3>
+        <div class="photos">${ins.photos.map((p,i) => `<div class="thumb" style="width:90px;height:90px"><img src="${imgSrc(p)}"><span class="ix">${i+1}</span></div>`).join('')}
+          <div class="add-ph" style="width:90px;height:90px" data-act="insCam">${I.cam}</div><div class="add-ph" style="width:90px;height:90px" data-act="insPick">${I.up}</div></div>
+        <label class="f" style="margin-top:12px">What should the AI focus on? (optional)<textarea rows="2" data-on="insContext" placeholder="e.g. Is this PVDB terminated correctly? Are the roof hooks fixed properly?">${esc(ins.context)}</textarea></label>
+        <label class="f" style="margin-top:10px">Link to job (optional – adds job context)<select data-on="insJob"><option value="">None</option>${jobOpts}</select></label>
+        <div class="row" style="margin-top:12px"><button class="btn ai" data-act="insRun" ${ins.photos.length && !ins.busy ? '' : 'disabled'}>${ins.busy ? '<span class="spin"></span> Critiquing…' : I.ai + ' Critique installation'}</button><button class="btn" data-act="insClear">Clear</button></div>
+      </div>
+      <div class="card pad">${ins.result ? critiqueHTML(ins.result) : '<div class="empty">The critique will appear here.</div>'}</div>
+    </div>
+    ${S.critiques.length ? `<h2 style="margin-top:22px">Recent critiques</h2><div class="jobs">${S.critiques.map(c => `<div class="card job" data-act="showCritique" data-id="${c.id}"><div class="row"><b>${esc(c.result?.overall?.replace('_',' ') || '')}</b><div class="spacer"></div><span class="meta">${fmtDT(c.createdAt)}</span></div><div class="meta">${esc((c.result?.summary || '').slice(0,140))}</div>${c.jobNumber ? `<div class="meta">Job #${esc(c.jobNumber)}</div>` : ''}</div>`).join('')}</div>` : ''}`;
+}
+function critiqueHTML(r) {
+  const cls = { good:'o-pass', minor_concerns:'o-pnc', non_compliant:'o-policy', unsafe:'o-safety', unclear:'o-none' }[r.overall] || 'o-none';
+  return `<div class="row"><span class="pill ${cls}" style="font-size:14px">${esc((r.overall||'').replace('_',' ').toUpperCase())}</span><span class="conf">${Math.round((r.confidence||0)*100)}% confidence</span></div>
+    ${r.whatItShows ? `<p class="sub" style="margin:8px 0 0">${esc(r.whatItShows)}</p>` : ''}
+    <p>${esc(r.summary)}</p>
+    ${(r.issues||[]).map(i => `<div class="issue sev-${esc(i.severity)}"><div>${i.code ? `<span class="code cat${CODE_MAP[i.code]?.cat}">${esc(i.code)}</span> ` : ''}<b>${esc(i.description)}</b>${i.recommendation ? `<div class="sub" style="margin:2px 0 0">Fix: ${esc(i.recommendation)}</div>` : ''}</div></div>`).join('')}
+    ${r.goodPractice?.length ? `<h3 style="margin-top:12px">Done well</h3><ul>${r.goodPractice.map(g => `<li>${esc(g)}</li>`).join('')}</ul>` : ''}
+    ${r.furtherEvidence?.length ? `<div class="guidance"><b>Further evidence:</b> ${r.furtherEvidence.map(esc).join(' · ')}</div>` : ''}
+    ${r.relatedChecks?.length ? `<p class="sub" style="margin-top:8px">Related checks: ${r.relatedChecks.filter(id=>QMAP[id]).map(id => '#' + QMAP[id].num + ' ' + esc(QMAP[id].text)).join('; ')}</p>` : ''}`;
+}
+async function insAddFiles(files) {
+  for (const f of files) { if (!f.type.startsWith('image/')) continue; try { const { img } = await readImage(f); S.ins.photos.push({ img, file:f }); } catch (e) { toast('Could not read ' + f.name, 'err'); } }
+  renderInspector();
+}
+async function insRun() {
+  const ins = S.ins; ins.busy = true; renderInspector();
+  const job = S.jobs.find(j => j.id === ins.jobId);
+  try {
+    const r = parseJSON(await callAI(critiquePrompt(ins.context, job), ins.photos.slice(0, 8).map(p => p.img)));
+    r.issues = (r.issues || []).map(i => ({ ...i, code: matchCode(i.code) || i.code || null }));
+    ins.result = r;
+    try {
+      const imgs = ins.photos.slice(0, 3).map(p => p.img).filter((x, i, arr) => arr.slice(0, i + 1).join('').length < 750000);
+      const d = { result: clean(r), context: ins.context, jobId: ins.jobId || null, jobNumber: job?.jobNumber || null, images: imgs, createdAt: Date.now(), createdBy: auditorName(), model: S.settings.provider === 'claude' ? S.settings.claudeModel : S.settings.geminiModel };
+      const ref_ = await addDoc(collection(db, COL.critiques), d); S.critiques.unshift({ id: ref_.id, ...d }); S.critiques = S.critiques.slice(0, 12);
+    } catch (e) { console.warn('critique save', e); }
+  } catch (e) { toast(aiErrorText(e), 'err', 7000); }
+  ins.busy = false; renderInspector();
+}
+async function loadCritiques() {
+  try { const s = await getDocs(query(collection(db, COL.critiques), orderBy('createdAt','desc'), limit(12))); S.critiques = s.docs.map(d => ({ id:d.id, ...d.data() })); } catch (e) { console.warn(e); }
+}
+
+/* ═════════════ VIEW: SETTINGS ═════════════ */
+function renderSettings() {
+  const st = S.settings;
+  $('#view-settings').innerHTML = `
+    <h1>Settings</h1><p class="sub">Shared settings are saved to Firestore (<code>${COL.settings}</code>). Your name and any API key stay on this device.</p>
+    <div class="card pad" style="margin-bottom:14px"><h2>You</h2><div class="form">
+      <label class="f">Your name (shown on audits)<input id="setAuditor" value="${esc(lsGet('as_auditor'))}"></label>
+      <label class="f">Auto AI check after adding photos to a check<select id="setAutocheck"><option value="on">On</option><option value="off" ${lsGet('as_autocheck')==='off'?'selected':''}>Off</option></select></label>
+    </div></div>
+    <div class="card pad" style="margin-bottom:14px"><h2>AI</h2><div class="form">
+      <label class="f">AI provider<select id="setProvider"><option value="firebase">Gemini via Firebase AI Logic (uses your Firebase project)</option><option value="claude" ${st.provider==='claude'?'selected':''}>Claude via Anthropic API key</option></select></label>
+      <label class="f">Gemini model<input id="setGemini" value="${esc(st.geminiModel)}"><span class="hint">Any vision model your Firebase AI Logic project supports.</span></label>
+      <label class="f">Claude model<input id="setClaude" value="${esc(st.claudeModel)}"></label>
+      <label class="f">Anthropic API key (this device only)<input id="setClaudeKey" type="password" value="${esc(lsGet('as_claude_key'))}" placeholder="sk-ant-…"></label>
+      <label class="f">Auto-clear confidence threshold: <b id="thrVal">${Math.round(st.autoAccept*100)}%</b><input id="setThr" type="range" min="0.6" max="0.99" step="0.01" value="${st.autoAccept}" oninput="document.getElementById('thrVal').textContent=Math.round(this.value*100)+'%'"><span class="hint">AI "pass" results at or above this confidence are answered automatically. Everything else goes to an auditor. Higher = safer, more manual review.</span></label>
+      <label class="f">Max photos sent per check<input id="setMax" type="number" min="1" max="12" value="${st.maxPhotos}"></label>
+    </div><div class="row" style="margin-top:12px"><button class="btn ai-o" data-act="testAI">${I.ai} Test AI connection</button><span id="testRes" class="sub" style="margin:0"></span></div></div>
+    <div class="card pad" style="margin-bottom:14px"><h2>Reports</h2><div class="form">
+      <label class="f">Company name on reports<input id="setCompany" value="${esc(st.companyName)}"></label>
+      <label class="f">Default report email recipient<input id="setEmail" type="email" value="${esc(st.reportEmail)}"></label>
+    </div></div>
+    <div class="row"><button class="btn pri" data-act="saveSettings">Save settings</button></div>
+    <div class="card pad" style="margin-top:18px"><h2>Firebase setup checklist</h2>
+      <ol style="margin:0;padding-left:20px;font-size:14px">
+        <li><b>AI Logic:</b> Firebase console → Build → <i>AI Logic</i> → Get started → choose <i>Gemini Developer API</i> (free tier available).</li>
+        <li><b>Firestore rules</b> must allow read/write on <code>${COL.jobs}</code>, <code>${COL.photos}</code>, <code>${COL.critiques}</code> and <code>${COL.settings}</code>.</li>
+        <li><b>Storage rules</b> must allow writes under <code>${STORAGE_ROOT}/</code>. If Storage is blocked, photos are still kept as compressed copies in Firestore.</li>
+      </ol></div>`;
+}
+async function saveSettings() {
+  lsSet('as_auditor', $('#setAuditor').value.trim()); lsSet('as_autocheck', $('#setAutocheck').value); lsSet('as_claude_key', $('#setClaudeKey').value.trim());
+  Object.assign(S.settings, { provider:$('#setProvider').value, geminiModel:$('#setGemini').value.trim() || DEFAULT_SETTINGS.geminiModel, claudeModel:$('#setClaude').value.trim() || DEFAULT_SETTINGS.claudeModel,
+    autoAccept:Number($('#setThr').value), maxPhotos:Math.max(1, Math.min(12, Number($('#setMax').value) || 6)), companyName:$('#setCompany').value.trim() || 'Automated Solar', reportEmail:$('#setEmail').value.trim() });
+  aiModelCache = null;
+  try { await setDoc(doc(db, COL.settings, 'config'), { ...S.settings, updatedAt:Date.now(), updatedBy:auditorName() }); toast('Settings saved', 'ok'); }
+  catch (e) { toast('Saved on this device, but Firestore failed: ' + (e.code || e.message), 'err'); }
+}
+
+/* ═════════════ NAV ═════════════ */
+function showView(v) {
+  S.view = v;
+  ['dashboard','job','inspector','settings'].forEach(x => { $('#view-' + x).classList.toggle('hidden', x !== v); $('#nav-' + x)?.classList.toggle('on', x === v); });
+  $('#nav-job').classList.toggle('hidden', !S.job);
+  if (v === 'dashboard') renderDashboard();
+  if (v === 'inspector') renderInspector();
+  if (v === 'settings') renderSettings();
+  window.scrollTo(0, 0);
+}
+
+/* ═════════════ EVENTS ═════════════ */
+const actions = {
+  nav: el => { if (el.dataset.view === 'job' && !S.job) return; showView(el.dataset.view); if (el.dataset.view === 'job') renderJob(); },
+  modalBg: (el, e) => { if (e.target === el) closeModal(); },
+  closeModal: () => closeModal(),
+  newJob: () => openModal({ title:'New job', body: jobForm({ systemType:'PV + Battery' }), foot:`<button class="btn" data-act="closeModal">Cancel</button><button class="btn pri" data-act="createJob">Create &amp; start audit</button>` }),
+  createJob: async (el) => {
+    const d = readJobForm(); if (!d.jobNumber) { toast('Job number is required', 'err'); return; }
+    if (S.jobs.some(j => String(j.jobNumber).toLowerCase() === d.jobNumber.toLowerCase()) && !confirm(`Job #${d.jobNumber} already exists. Create another?`)) return;
+    el.disabled = true;
+    try { const j = await createJob(d); closeModal(); if (!S.jobs.find(x => x.id === j.id)) S.jobs.unshift(j); S.stage = 'pre'; openJob(j.id); }
+    catch (e) { toast('Could not create job: ' + (e.code || e.message), 'err'); el.disabled = false; }
+  },
+  editJob: () => openModal({ title:'Edit job', body: jobForm(S.job), foot:`<button class="btn danger" data-act="deleteJob">Delete job</button><div class="spacer"></div><button class="btn" data-act="closeModal">Cancel</button><button class="btn pri" data-act="saveJobEdit">Save</button>` }),
+  saveJobEdit: () => { const d = readJobForm(); if (!d.jobNumber) { toast('Job number is required', 'err'); return; } Object.assign(S.job, d); markDirty(); closeModal(); renderJob(); },
+  deleteJob: async () => {
+    if (!confirm(`Delete job #${S.job.jobNumber} and its ${S.photos.length} photos? This cannot be undone.`)) return;
+    try { for (const p of [...S.photos]) await deletePhoto(p); await deleteDoc(doc(db, COL.jobs, S.job.id)); S.job = null; closeModal(); showView('dashboard'); toast('Job deleted'); }
+    catch (e) { toast('Delete failed: ' + (e.code || e.message), 'err'); }
+  },
+  openJob: el => openJob(el.dataset.id),
+  stage: el => { S.stage = el.dataset.stage; S.filter = 'all'; updateJobHeader(); renderQuestions(); },
+  filter: el => { S.filter = el.dataset.f; updateJobHeader(); renderQuestions(); },
+  answer: el => setAnswer(el.dataset.q, el.dataset.v),
+  pick: el => { S.pickTarget = { type:'job', q:el.dataset.q }; $('#pickFiles').click(); },
+  camera: el => { S.pickTarget = { type:'job', q:el.dataset.q }; openCamera(); },
+  aiCheck: el => aiCheckQuestion(el.dataset.q).then(() => updateJobHeader()).catch(() => {}),
+  acceptAi: el => {
+    const q = QMAP[el.dataset.q], a = ans(q.id), ai = a.ai;
+    if (ai.recommendedAnswer) a.answer = ai.recommendedAnswer;
+    a.codes = a.answer === q.triggers ? [...new Set([...(a.codes||[]), ...ai.issues.map(i => i.code).filter(Boolean)])] : [];
+    a.review = 'human'; a.by = auditorName(); a.at = Date.now();
+    markDirty(q.id); refreshCard(q.id); updateJobHeader();
+  },
+  applyCode: el => {
+    const q = QMAP[el.dataset.q], a = ans(q.id);
+    if (q.triggers && a.answer !== q.triggers) a.answer = q.triggers;
+    if (!a.codes.includes(el.dataset.code)) a.codes.push(el.dataset.code);
+    a.review = 'human'; a.by = auditorName(); a.at = Date.now();
+    markDirty(q.id); refreshCard(q.id); updateJobHeader();
+  },
+  verify: el => { const a = ans(el.dataset.q); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); refreshCard(el.dataset.q); updateJobHeader(); },
+  viewPhoto: el => viewPhoto(el.dataset.id),
+  viewUnsorted: () => viewUnsorted(),
+  untag: async el => { const p = S.photos.find(x => x.id === el.dataset.id); p.qIds = (p.qIds||[]).filter(x => x !== el.dataset.q); await updatePhotoTags(p); refreshCard(el.dataset.q); viewPhoto(p.id); },
+  delPhoto: async el => {
+    const p = S.photos.find(x => x.id === el.dataset.id); if (!p || !confirm('Delete this photo?')) return;
+    try { await deletePhoto(p); closeModal(); (p.qIds||[]).forEach(refreshCard); renderJob(); toast('Photo deleted'); } catch (e) { toast('Delete failed: ' + (e.code||e.message), 'err'); }
+  },
+  bulkUpload: () => bulkUploadModal(),
+  bulkPick: () => { S.pickTarget = { type:'bulk' }; $('#pickFiles').click(); },
+  runAll: el => {
+    const scope = el.dataset.scope;
+    const qids = visibleQs(S.job, scope === 'stage' ? S.stage : null).filter(q => peek(S.job,q.id)?.review !== 'human').map(q => q.id);
+    if (!qids.length) { toast('Every check in scope is already auditor-verified.'); return; }
+    openProgress(scope === 'stage' ? `AI check – ${STAGES.find(s=>s.id===S.stage).label}` : 'AI check – whole job');
+    runChecks(qids, 'Evidence check');
+  },
+  cancelProg: () => { S.cancel = true; plog('Stopping after current item…'); },
+  report: () => openReport(),
+  aiWriteup: el => aiWriteup(el),
+  printReport: () => printReport(),
+  emailReport: () => emailReport(),
+  completeAudit: () => {
+    const sum = summarise(S.job);
+    if ((sum.needsReview || sum.totalQ - sum.answeredQ) && !confirm(`${sum.totalQ - sum.answeredQ} unanswered and ${sum.needsReview} awaiting review. Complete the audit anyway?`)) return;
+    S.job.status = 'Complete'; S.job.completedAt = Date.now(); S.job.completedBy = auditorName(); markDirty(); updateJobHeader(); toast('Audit marked complete', 'ok');
+  },
+  reopen: () => { S.job.status = 'In progress'; markDirty(); updateJobHeader(); },
+  camShoot: () => camShoot(),
+  camSwitch: () => { S.cam.facing = S.cam.facing === 'environment' ? 'user' : 'environment'; startCam(); },
+  camDone: () => { const shots = S.cam?.shots || []; closeModal(); if (shots.length) routeFiles(shots); },
+  insPick: () => { S.pickTarget = { type:'ins' }; $('#pickFiles').click(); },
+  insCam: () => { S.pickTarget = { type:'ins' }; openCamera(); },
+  insRun: () => insRun(),
+  insClear: () => { S.ins = { photos:[], result:null, context:'', jobId:S.ins.jobId }; renderInspector(); },
+  showCritique: el => { const c = S.critiques.find(x => x.id === el.dataset.id); if (!c) return; openModal({ title:'Critique', wide:true, body:`${(c.images||[]).length ? `<div class="photos" style="margin-bottom:10px">${c.images.map(i => `<div class="thumb" style="width:110px;height:110px"><img src="data:image/jpeg;base64,${i}"></div>`).join('')}</div>` : ''}${c.context ? `<p class="sub">Focus: ${esc(c.context)}</p>` : ''}${critiqueHTML(c.result || {})}` }); },
+  saveSettings: () => saveSettings(),
+  testAI: async () => {
+    await saveSettings(); const out = $('#testRes'); out.innerHTML = '<span class="spin"></span> Testing…';
+    try { const r = parseJSON(await callAI('Reply with JSON {"ok": true, "model": "<your model name>"}')); out.textContent = r.ok ? '✓ AI is working' : 'Unexpected reply'; out.style.color = 'var(--ok)'; }
+    catch (e) { out.textContent = aiErrorText(e); out.style.color = 'var(--safety)'; }
+  }
+};
+function routeFiles(files) {
+  const t = S.pickTarget || {};
+  if (t.type === 'ins') insAddFiles(files);
+  else if (t.type === 'bulk') runBulk(files);
+  else if (t.type === 'job') handleFiles(files, t.q);
+}
+document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const fn = actions[el.dataset.act]; if (fn) fn(el, e); });
+
+let notesTimer = {}, searchTimer;
+document.addEventListener('input', e => {
+  const el = e.target, on = el.dataset?.on; if (!on) return;
+  if (on === 'notes') { const a = ans(el.dataset.q); a.notes = el.value; clearTimeout(notesTimer[el.dataset.q]); notesTimer[el.dataset.q] = setTimeout(() => markDirty(el.dataset.q), 400); el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+  if (on === 'jobSearch') { S.jobSearch = el.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { renderDashboard(); const i = document.querySelector('[data-on="jobSearch"]'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); }
+  if (on === 'insContext') S.ins.context = el.value;
+});
+document.addEventListener('change', async e => {
+  const el = e.target, on = el.dataset?.on; if (!on) return;
+  if (on === 'selAnswer') setAnswer(el.dataset.q, el.value || ans(el.dataset.q).answer);
+  if (on === 'code') { const a = ans(el.dataset.q); a.codes = el.checked ? [...new Set([...a.codes, el.value])] : a.codes.filter(c => c !== el.value); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); updateJobHeader(); }
+  if (on === 'addCode' && el.value) { const a = ans(el.dataset.q); if (!a.codes.includes(el.value)) a.codes.push(el.value); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); refreshCard(el.dataset.q); updateJobHeader(); }
+  if (on === 'jobStatus') { S.jobStatus = el.value; renderDashboard(); }
+  if (on === 'jobOutcome') { S.jobOutcome = el.value; renderDashboard(); }
+  if (on === 'insJob') S.ins.jobId = el.value || null;
+  if (on === 'tagPhoto' && el.value) { const p = S.photos.find(x => x.id === el.dataset.id); p.qIds = [...new Set([...(p.qIds||[]), el.value])]; await updatePhotoTags(p); refreshCard(el.value); renderJob(); viewPhoto(p.id); toast('Photo assigned to #' + QMAP[el.value].num); }
+});
+['pickFiles','pickCamera'].forEach(id => $('#' + id).addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) routeFiles(files); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalRoot').innerHTML) closeModal(); });
+window.addEventListener('beforeunload', e => { if (S.dirty.size || S.dirtyMeta) { saveJob(); e.preventDefault(); } });
+
+
+/* ═════════════ BOOT ═════════════ */
+(async function boot() {
+  if (!lsGet('as_auditor')) { const n = prompt('Your name (shown on audits):', ''); if (n) lsSet('as_auditor', n.trim()); }
+  await loadSettings();
+  showView('dashboard');
+  $('#view-dashboard').innerHTML = '<div class="empty"><span class="spin"></span> Loading jobs…</div>';
+  listenJobs();
+  loadCritiques();
+})();
+</script>
+</body>
+</html>
