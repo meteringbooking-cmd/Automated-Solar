@@ -3,277 +3,466 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Automated Solar – AI Installation Audit</title>
-<meta name="theme-color" content="#14202b">
+<title>Automated Solar · Installation audit</title>
+<meta name="description" content="Audit solar PV and battery installations from pre-install to handover. AI reviews photo evidence against BS 7671, MCS and company standards so auditors only review what needs them.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230F1B2D'/%3E%3Ccircle cx='16' cy='13' r='5' fill='%23F2A10C'/%3E%3Cpath d='M7 25h18' stroke='%23F2A10C' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#14202b; --ink-2:#2b3a48; --muted:#64707c; --bg:#f3f4f0; --card:#ffffff; --line:#e1e4dc; --line-2:#cfd4c9;
-  --sun:#f5a524; --sun-soft:#fff3dc; --sun-ink:#8a5300;
-  --ok:#1f8f4e; --ok-soft:#e5f5ec; --pnc:#b8860b; --pnc-soft:#fbf3dc;
-  --policy:#d9480f; --policy-soft:#fdebe2; --safety:#c92a2a; --safety-soft:#fbe5e5;
-  --ai:#5b4bdb; --ai-soft:#efedfd; --info:#1c6fb8; --info-soft:#e6f0fa;
-  --r:12px; --sh:0 1px 2px rgba(20,32,43,.06),0 4px 14px rgba(20,32,43,.05);
-  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  /* Neutrals */
+  --canvas:#F5F6F8; --surface:#FFFFFF; --sunken:#F8F9FA;
+  --ink:#0F1B2D; --ink-2:#2A3647; --text-2:#5A6676; --text-3:#7D8794;
+  --line:#E3E6EB; --line-2:#D3D8DF;
+  /* Accent: solar amber */
+  --accent:#F2A10C; --accent-hover:#E39400; --accent-text:#9A5B00; --accent-soft:#FEF5E4; --accent-line:#F7D594;
+  /* Outcome semantics */
+  --pass:#0F7A55; --pass-soft:#E7F5EF;
+  --pnc:#1D5FB8;  --pnc-soft:#EAF1FB;
+  --policy:#C2410C; --policy-soft:#FDEEE5;
+  --safety:#B42318; --safety-soft:#FDECEA;
+  /* System */
+  --r-sm:8px; --r:10px; --r-lg:14px;
+  --sh-1:0 1px 2px rgba(15,27,45,.05);
+  --sh-2:0 1px 2px rgba(15,27,45,.04),0 8px 24px -8px rgba(15,27,45,.10);
+  --sh-3:0 24px 64px -16px rgba(15,27,45,.28);
+  --focus:0 0 0 2px #fff,0 0 0 4px #B87400;
+  --sans:"Geist",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
 }
 *{box-sizing:border-box}
-html,body{margin:0}
-body{font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--sans);font-size:15px;line-height:1.5;color:var(--ink);background:var(--canvas);-webkit-font-smoothing:antialiased;font-feature-settings:"ss01","cv11"}
 button,input,select,textarea{font:inherit;color:inherit}
-a{color:var(--info)}
+a{color:inherit}
+img{max-width:100%}
 .hidden{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus{outline:none}
+:focus-visible{box-shadow:var(--focus);border-radius:6px}
+h1,h2,h3{margin:0;letter-spacing:-.02em;color:var(--ink)}
+h1{font-size:28px;line-height:1.15;font-weight:650}
+h2{font-size:18px;font-weight:600}
+h3{font-size:15px;font-weight:600;letter-spacing:-.01em}
+p{margin:0}
+.muted{color:var(--text-2)}
+.small{font-size:13px}
+.mono{font-family:var(--mono);font-feature-settings:normal}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1}
 
-/* Header */
-header.top{position:sticky;top:0;z-index:40;background:var(--ink);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-.top-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:10px 16px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap;cursor:pointer}
-.brand small{display:block;font-weight:500;color:#9fb0bf;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
-nav.tabs{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
-nav.tabs button{background:none;border:0;color:#c7d2dc;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
-nav.tabs button:hover{background:rgba(255,255,255,.08);color:#fff}
-nav.tabs button.on{background:var(--sun);color:var(--ink)}
-.conn{font-size:12px;color:#9fb0bf;display:flex;align-items:center;gap:6px;white-space:nowrap}
-.dot{width:8px;height:8px;border-radius:50%;background:#888;display:inline-block}
-.dot.ok{background:#3ccf7b}.dot.bad{background:#ff6b6b}
+/* ── Header ── */
+.app-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line)}
+.hdr{max-width:1200px;margin:0 auto;height:64px;padding:0 24px;display:flex;align-items:center;gap:28px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.015em;font-size:16px;text-decoration:none;cursor:pointer;background:none;border:0;padding:4px 2px}
+.logo-mark{width:30px;height:30px;flex:none}
+.nav{display:flex;gap:2px;height:100%}
+.navlink{position:relative;display:flex;align-items:center;height:100%;padding:0 12px;background:none;border:0;color:var(--text-2);font-weight:500;font-size:14px;cursor:pointer;transition:color .15s}
+.navlink:hover{color:var(--ink)}
+.navlink[aria-current="page"]{color:var(--ink)}
+.navlink[aria-current="page"]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;border-radius:2px;background:var(--accent)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.conn{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2);white-space:nowrap}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--text-3)}
+.conn-dot.ok{background:var(--pass);box-shadow:0 0 0 3px var(--pass-soft)}
+.conn-dot.bad{background:var(--safety);box-shadow:0 0 0 3px var(--safety-soft)}
+.user-chip{display:flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;padding:4px;border-radius:999px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600;letter-spacing:.02em}
 
-main{max-width:1240px;margin:0 auto;padding:18px 16px 80px}
-h1{font-size:24px;margin:0 0 4px}
-h2{font-size:18px;margin:0 0 10px}
-h3{font-size:15px;margin:0 0 8px}
-.sub{color:var(--muted);margin:0 0 16px}
+/* ── Page ── */
+.page{max-width:1200px;margin:0 auto;padding:36px 24px 96px}
+.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.page-head p{margin-top:6px;color:var(--text-2);max-width:60ch}
+.page-head .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 
-/* Buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line-2);background:#fff;padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap;transition:background .12s,border-color .12s,transform .05s}
-.btn:hover{background:#f7f8f5;border-color:#b9c0b3}
+/* ── Buttons ── */
+.btn{--h:38px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:var(--h);padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:550;font-size:14px;cursor:pointer;white-space:nowrap;text-decoration:none;box-shadow:var(--sh-1);transition:background .15s,border-color .15s,box-shadow .15s,transform .08s}
+.btn:hover{background:var(--sunken);border-color:#C3C9D1}
 .btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.pri{background:var(--sun);border-color:var(--sun);color:var(--ink)}
-.btn.pri:hover{background:#ffb43d}
-.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
-.btn.dark:hover{background:var(--ink-2)}
-.btn.ai{background:var(--ai);border-color:var(--ai);color:#fff}
-.btn.ai:hover{background:#4a3bc9}
-.btn.ai-o{border-color:#cdc7f7;color:var(--ai);background:var(--ai-soft)}
-.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
-.btn.danger{color:var(--safety);border-color:#efc4c4}
-.btn.sm{padding:5px 9px;font-size:13px;border-radius:7px}
-.btn.ghost{border-color:transparent;background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn svg{width:16px;height:16px;flex:none}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.spacer{flex:1}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 1px 2px rgba(15,27,45,.2),inset 0 1px 0 rgba(255,255,255,.08)}
+.btn-primary:hover{background:var(--ink-2);border-color:var(--ink-2)}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:var(--ink);box-shadow:0 1px 2px rgba(154,91,0,.25),inset 0 1px 0 rgba(255,255,255,.3)}
+.btn-accent:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-quiet{border-color:transparent;background:transparent;box-shadow:none;color:var(--text-2)}
+.btn-quiet:hover{background:rgba(15,27,45,.05);color:var(--ink);border-color:transparent}
+.btn-danger{color:var(--safety)}
+.btn-danger:hover{background:var(--safety-soft);border-color:#F2C1BC}
+.btn-sm{--h:32px;padding:0 11px;font-size:13px}
+.btn-block{width:100%}
+.icon-btn{width:34px;height:34px;display:grid;place-items:center;border:0;background:none;border-radius:8px;cursor:pointer;color:var(--text-2)}
+.icon-btn:hover{background:rgba(15,27,45,.06);color:var(--ink)}
+.icon-btn svg{width:18px;height:18px}
 
-/* Cards / stats */
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
-.pad{padding:16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
-.stat{padding:14px 16px}
-.stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-.stat .v{font-size:28px;font-weight:700;margin-top:2px}
-.stat .h{font-size:12px;color:var(--muted)}
-.stat.accent{border-top:3px solid var(--sun)}
-.stat.aiacc{border-top:3px solid var(--ai)}
-.stat.warn{border-top:3px solid var(--pnc)}
-.stat.bad{border-top:3px solid var(--safety)}
+/* ── Surfaces ── */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-1)}
+.panel-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.panel-head p{color:var(--text-2);font-size:13px}
+.panel-body{padding:20px}
+.stack>*+*{margin-top:16px}
 
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.filters input,.filters select{padding:8px 10px;border:1px solid var(--line-2);border-radius:9px;background:#fff;min-width:0}
-.filters input{flex:1 1 220px}
-
-.jobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.job{padding:14px;cursor:pointer;transition:border-color .12s,transform .1s}
-.job:hover{border-color:var(--sun)}
-.job .jn{font-family:var(--mono);font-weight:700;font-size:15px}
-.job .meta{color:var(--muted);font-size:13px}
-.mini-stages{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.mini-stages div{font-size:11px;color:var(--muted)}
-.bar{height:6px;background:#eceee8;border-radius:4px;overflow:hidden;margin-top:3px}
-.bar i{display:block;height:100%;background:var(--ok);border-radius:4px}
-
-.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
-.o-pass{background:var(--ok-soft);color:var(--ok)}
-.o-pnc{background:var(--pnc-soft);color:#7d5b00}
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12.5px;font-weight:550;white-space:nowrap;border:1px solid transparent}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+.badge.plain::before{display:none}
+.o-pass{background:var(--pass-soft);color:var(--pass)}
+.o-pnc{background:var(--pnc-soft);color:var(--pnc)}
 .o-policy{background:var(--policy-soft);color:var(--policy)}
 .o-safety{background:var(--safety-soft);color:var(--safety)}
-.o-none{background:#eef0ea;color:var(--muted)}
-.o-ai{background:var(--ai-soft);color:var(--ai)}
-.o-needs{background:var(--sun-soft);color:var(--sun-ink)}
-.o-info{background:var(--info-soft);color:var(--info)}
+.o-none{background:#EEF0F3;color:var(--text-2)}
+.o-review{background:var(--accent-soft);color:var(--accent-text);border-color:var(--accent-line)}
+.o-ai{background:#EEF0F3;color:var(--ink-2)}
+.o-done{background:var(--ink);color:#fff}
 
-.empty{text-align:center;color:var(--muted);padding:40px 16px}
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);margin-bottom:32px}
+.metric{padding:20px 22px}
+.metric+.metric{border-left:1px solid var(--line)}
+.metric-label{font-size:13px;color:var(--text-2);font-weight:500}
+.metric-value{font-size:32px;font-weight:650;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.1}
+.metric-note{font-size:13px;color:var(--text-3);margin-top:4px}
+.metric-value.accent{color:var(--accent-text)}
 
-/* Job view */
-.jhead{padding:16px;margin-bottom:12px}
-.jhead .top-line{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.jhead .jn{font-family:var(--mono);font-size:22px;font-weight:800}
-.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 16px;margin-top:10px;font-size:13px}
-.kv b{display:block;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
-.stage-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-.stage-tab{padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:#fff;cursor:pointer;text-align:left}
-.stage-tab.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.stage-tab .t{font-weight:700;display:flex;justify-content:space-between;gap:6px}
-.stage-tab .s{font-size:12px;color:var(--muted)}
-.stage-tab .cnt{font-size:12px;font-weight:700;color:var(--muted)}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{border:1px solid var(--line-2);background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer}
-.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.sec-title{font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:700;margin:20px 0 8px;display:flex;align-items:center;gap:8px}
-.sec-title:after{content:"";flex:1;height:1px;background:var(--line-2)}
+/* ── Progress ── */
+.track{height:6px;border-radius:999px;background:#ECEEF2;overflow:hidden}
+.track>i{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .4s var(--ease)}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;min-width:120px}
+.seg3 .track{height:5px}
+.seg3 .track>i.done{background:var(--pass)}
 
-.q{padding:14px;margin-bottom:10px;border-left:4px solid var(--line-2)}
-.q.st-needs{border-left-color:var(--sun)}
-.q.st-ai{border-left-color:var(--ai)}
-.q.st-human{border-left-color:var(--ok)}
-.q.is-fail{background:linear-gradient(90deg,#fff7f6,#fff 40%)}
-.qtop{display:flex;gap:10px;align-items:flex-start}
-.qnum{flex:none;width:28px;height:28px;border-radius:8px;background:#eef0ea;font-weight:700;font-size:13px;display:grid;place-items:center}
-.qtext{flex:1;font-weight:600}
-.qtext small{display:block;color:var(--muted);font-weight:400;font-size:12px}
-.ans{display:flex;gap:6px;margin:10px 0 0 38px;flex-wrap:wrap}
-.ans button{min-width:64px;padding:7px 12px;border-radius:9px;border:1px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer}
-.ans button.on.v-Yes{background:var(--ok);border-color:var(--ok);color:#fff}
-.ans button.on.v-No{background:var(--safety);border-color:var(--safety);color:#fff}
-.ans button.on.v-NA{background:#6b7480;border-color:#6b7480;color:#fff}
-.ans select{padding:7px 10px;border:1px solid var(--line-2);border-radius:9px;background:#fff;font-weight:600}
-.qbody{margin-left:38px}
-.photos{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
-.thumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in;background:#eee}
+/* ── Toolbar / inputs ── */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.input,.select{height:38px;padding:0 12px;border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--surface);font-size:14px;box-shadow:var(--sh-1);transition:border-color .15s,box-shadow .15s}
+.input:hover,.select:hover{border-color:#C3C9D1}
+.input:focus,.select:focus,textarea:focus{border-color:#B87400;box-shadow:0 0 0 3px rgba(242,161,12,.22);outline:none}
+.select{padding-right:32px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A6676' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.search{position:relative;flex:1 1 260px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-3)}
+.search .input{width:100%;padding-left:36px}
+.segmented{display:inline-flex;padding:3px;background:#ECEEF2;border-radius:10px;gap:2px;flex-wrap:wrap}
+.segmented button{height:30px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--text-2);font-size:13px;font-weight:550;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+.segmented button:hover{color:var(--ink)}
+.segmented button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(15,27,45,.12)}
+.segmented .count{color:var(--text-3);font-variant-numeric:tabular-nums;margin-left:4px}
+
+/* ── Job table ── */
+.tl{overflow:hidden}
+.tl-row{display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(180px,1.6fr) minmax(130px,1fr) 150px 140px 150px;gap:16px;align-items:center;padding:14px 20px;border-top:1px solid var(--line)}
+.tl-head{border-top:0;padding-top:12px;padding-bottom:12px;background:var(--sunken);font-size:12.5px;color:var(--text-2);font-weight:550}
+.tl-body .tl-row{cursor:pointer;transition:background .12s}
+.tl-body .tl-row:hover{background:#FAFAFB}
+.tl-body .tl-row:first-child{border-top:1px solid var(--line)}
+.tl-job{font-family:var(--mono);font-weight:600;font-size:14px}
+.tl-sub{font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-main{font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-k{display:none}
+.section-label{display:flex;align-items:baseline;gap:10px;margin:0 0 12px}
+.section-label h2{font-size:16px}
+.section-label span{color:var(--text-3);font-size:13px}
+
+.queue{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:36px}
+.queue-item{display:block;text-align:left;padding:16px 18px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;border-left:3px solid var(--accent)}
+.queue-item:hover{border-color:var(--line-2);border-left-color:var(--accent);box-shadow:var(--sh-2)}
+.queue-item .n{font-size:24px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* ── Empty / loading / error ── */
+.empty-state{text-align:center;padding:56px 24px;color:var(--text-2)}
+.empty-state h3{font-size:17px;margin:14px 0 6px}
+.empty-state p{max-width:46ch;margin:0 auto 18px}
+.empty-icon{width:48px;height:48px;margin:0 auto;border-radius:12px;background:var(--accent-soft);color:var(--accent-text);display:grid;place-items:center}
+.empty-icon svg{width:24px;height:24px}
+.steps-intro{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:760px;margin:26px auto 0;text-align:left}
+.steps-intro div{font-size:13.5px}
+.steps-intro b{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;margin-bottom:4px}
+.steps-intro b span{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;display:grid;place-items:center}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:64px 24px;color:var(--text-2)}
+.spin{width:16px;height:16px;border:2px solid rgba(15,27,45,.15);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;flex:none;display:inline-block}
+.btn-primary .spin,.btn-accent .spin{border-color:rgba(255,255,255,.35);border-top-color:#fff}
+.btn-accent .spin{border-color:rgba(15,27,45,.2);border-top-color:var(--ink)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--r);border:1px solid #F2C1BC;background:var(--safety-soft);color:#7A1A12;margin-bottom:20px;font-size:14px}
+.alert svg{width:18px;height:18px;flex:none;margin-top:2px}
+.alert.info{border-color:var(--accent-line);background:var(--accent-soft);color:#6B4100}
+
+/* ── Job view ── */
+.crumbs{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);margin-bottom:14px}
+.crumbs button{background:none;border:0;padding:2px 4px;color:var(--text-2);cursor:pointer;border-radius:6px}
+.crumbs button:hover{color:var(--ink)}
+.crumbs svg{width:14px;height:14px}
+.job-title{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.job-title h1{font-family:var(--mono);font-weight:600;letter-spacing:-.03em;font-size:26px}
+.job-meta{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:8px;font-size:14px;color:var(--text-2)}
+.job-meta b{color:var(--ink);font-weight:550}
+.job-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+.aside{position:sticky;top:84px;display:flex;flex-direction:column;gap:16px}
+.outcome{padding:18px 20px;border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom:1px solid var(--line)}
+.outcome-label{font-size:13px;color:var(--text-2)}
+.outcome-value{font-size:20px;font-weight:650;letter-spacing:-.02em;margin-top:2px}
+.outcome-value.k-pass{color:var(--pass)}.outcome-value.k-pnc{color:var(--pnc)}.outcome-value.k-policy{color:var(--policy)}.outcome-value.k-safety{color:var(--safety)}.outcome-value.k-none{color:var(--text-2)}
+.facts{list-style:none;margin:0;padding:8px 20px}
+.facts li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px;border-top:1px solid var(--line)}
+.facts li:first-child{border-top:0}
+.facts b{font-variant-numeric:tabular-nums;font-weight:600}
+.aside-actions{padding:16px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.review-callout{padding:16px 20px;background:var(--accent-soft);border-top:1px solid var(--accent-line);border-bottom:1px solid var(--accent-line)}
+.review-callout b{display:block;font-size:15px}
+.review-callout p{font-size:13px;color:#6B4100;margin:2px 0 10px}
+
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:20px;padding:6px}
+.step{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:12px 14px;border:0;background:none;border-radius:10px;cursor:pointer;transition:background .15s;position:relative}
+.step:hover{background:var(--sunken)}
+.step[aria-selected="true"]{background:var(--sunken);box-shadow:inset 0 0 0 1px var(--line)}
+.step-num{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;font-weight:600;border:1.5px solid var(--line-2);color:var(--text-2);background:var(--surface)}
+.step[aria-selected="true"] .step-num{background:var(--ink);border-color:var(--ink);color:#fff}
+.step-num.complete{background:var(--pass);border-color:var(--pass);color:#fff}
+.step-num svg{width:14px;height:14px}
+.step-body{flex:1;min-width:0}
+.step-title{font-weight:600;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.step-title span{font-weight:500;color:var(--text-3);font-variant-numeric:tabular-nums;font-size:13px}
+.step-sub{font-size:12.5px;color:var(--text-2);margin:2px 0 8px}
+.step .flag{font-size:12px;color:var(--accent-text);font-weight:550;margin-top:6px}
+
+.q-section{margin-bottom:20px}
+.q-section .panel-head{padding:14px 20px;background:var(--sunken);border-radius:var(--r-lg) var(--r-lg) 0 0}
+.q-section .panel-head h3{font-size:14px}
+.q{padding:18px 20px;border-top:1px solid var(--line);position:relative}
+.q-list>.q:first-child{border-top:0}
+.q.is-fail::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--safety)}
+.q.st-needs::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
+.q-head{display:flex;gap:12px;align-items:flex-start}
+.q-num{flex:none;width:26px;font-family:var(--mono);font-size:13px;color:var(--text-3);padding-top:1px;font-weight:500}
+.q-text{flex:1;font-weight:550;line-height:1.4}
+.q-inner{margin-left:38px}
+.q-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.answer-seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;box-shadow:var(--sh-1);background:var(--surface)}
+.answer-seg button{height:34px;min-width:60px;padding:0 14px;border:0;background:transparent;font-size:13.5px;font-weight:550;cursor:pointer;color:var(--ink-2);transition:background .15s,color .15s}
+.answer-seg button+button{border-left:1px solid var(--line-2)}
+.answer-seg button:hover{background:var(--sunken)}
+.answer-seg button[aria-pressed="true"].v-Yes{background:var(--pass);color:#fff}
+.answer-seg button[aria-pressed="true"].v-No{background:var(--safety);color:#fff}
+.answer-seg button[aria-pressed="true"].v-NA{background:var(--ink-2);color:#fff}
+.evidence{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.thumb{position:relative;width:60px;height:60px;border-radius:9px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in;background:#EEF0F3;padding:0;transition:transform .15s var(--ease),box-shadow .15s}
+.thumb:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb .ix{position:absolute;left:3px;top:3px;background:rgba(20,32,43,.75);color:#fff;font-size:10px;font-weight:700;border-radius:4px;padding:0 4px}
-.add-ph{width:64px;height:64px;border:1.5px dashed var(--line-2);border-radius:8px;display:grid;place-items:center;color:var(--muted);cursor:pointer;background:#fafbf8}
-.add-ph:hover{border-color:var(--sun);color:var(--sun-ink)}
-.add-ph svg{width:22px;height:22px}
+.thumb .ix{position:absolute;left:4px;bottom:4px;background:rgba(15,27,45,.72);color:#fff;font-size:10.5px;font-weight:600;border-radius:5px;padding:0 5px;line-height:16px}
+.add-tile{width:60px;height:60px;border:1px dashed var(--line-2);border-radius:9px;display:grid;place-items:center;color:var(--text-2);cursor:pointer;background:var(--surface);transition:border-color .15s,color .15s,background .15s;padding:0}
+.add-tile:hover{border-color:#B87400;color:var(--accent-text);background:var(--accent-soft)}
+.add-tile svg{width:20px;height:20px}
+.ai-note{margin-top:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--sunken);overflow:hidden}
+.ai-note-head{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.ai-note-head .who{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+.ai-note-head .who svg{width:15px;height:15px;color:var(--accent-text)}
+.ai-note-body{padding:12px 14px;font-size:14px}
+.ai-note-body ul{margin:8px 0 0;padding-left:18px;color:var(--ink-2)}
+.ai-note-body li{margin:3px 0}
+.ai-note-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--text-3)}
+.conf{display:inline-flex;align-items:center;gap:8px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.conf .track{width:56px;height:4px}
+.conf .track>i{background:var(--ink-2)}
+.v-pass{color:var(--pass);background:var(--pass-soft)}
+.v-fail{color:var(--safety);background:var(--safety-soft)}
+.v-insufficient_evidence{color:var(--accent-text);background:var(--accent-soft)}
+.v-not_applicable{color:var(--text-2);background:#EEF0F3}
+.finding{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:9px}
+.finding .code{font-family:var(--mono);font-size:12px;font-weight:600;white-space:nowrap;padding-top:1px}
+.finding .txt{flex:1}
+.callout{margin-top:10px;padding:9px 12px;border-radius:8px;background:var(--accent-soft);color:#6B4100;font-size:13px}
+.cat1{color:var(--safety)}.cat2{color:var(--policy)}.cat3{color:var(--pnc)}.cat4{color:var(--text-2)}
+details.codes{margin-top:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+details.codes>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:13.5px;font-weight:550;border-radius:var(--r)}
+details.codes>summary::-webkit-details-marker{display:none}
+details.codes>summary svg{width:14px;height:14px;transition:transform .2s var(--ease);color:var(--text-2)}
+details.codes[open]>summary svg{transform:rotate(90deg)}
+details.codes>summary .sel{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.code-list{padding:4px 14px 12px;border-top:1px solid var(--line)}
+.code-opt{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:13.5px;cursor:pointer;border-top:1px solid #F0F2F4}
+.code-opt:first-child{border-top:0}
+.code-opt input{margin-top:3px;width:16px;height:16px;accent-color:var(--ink);flex:none}
+.code-opt .act{display:block;color:var(--text-2);font-size:12.5px;margin-top:1px}
+.code-opt b{font-family:var(--mono);font-size:12px;font-weight:600;margin-right:4px}
+.code-tag{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:6px;background:#F2F4F7}
+.ai-tag{font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--accent-soft);color:var(--accent-text);margin-left:4px}
+.note-input{width:100%;margin-top:12px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;min-height:40px;resize:vertical;background:var(--surface);font-size:14px;line-height:1.45;transition:border-color .15s,box-shadow .15s}
+.note-input::placeholder{color:var(--text-3)}
+.q-foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--text-3)}
+.q-status{flex:none}
 
-.aip{margin-top:10px;border:1px solid #dcd7fb;background:linear-gradient(180deg,#f7f6ff,#fff);border-radius:10px;padding:10px 12px}
-.aip .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:700;color:var(--ai);font-size:13px}
-.aip .sum{margin:6px 0 4px}
-.aip ul{margin:4px 0 4px 18px;padding:0;font-size:13.5px}
-.aip li{margin:2px 0}
-.issue{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:8px;background:#fff;border:1px solid var(--line);margin:6px 0;font-size:13.5px}
-.issue .code{font-family:var(--mono);font-size:12px;font-weight:700;white-space:nowrap}
-.conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
-.conf .bar{width:60px;margin:0}
-.conf .bar i{background:var(--ai)}
-.v-pass{background:var(--ok-soft);color:var(--ok)}
-.v-fail{background:var(--safety-soft);color:var(--safety)}
-.v-insufficient_evidence{background:var(--sun-soft);color:var(--sun-ink)}
-.v-not_applicable{background:#eef0ea;color:var(--muted)}
+/* ── Forms ── */
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.form-grid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:550;color:var(--ink-2)}
+.field .input,.field .select{width:100%;height:40px;font-weight:400}
+.field textarea{padding:10px 12px;border:1px solid var(--line-2);border-radius:var(--r-sm);font-weight:400;resize:vertical;box-shadow:var(--sh-1)}
+.field .hint{font-weight:400;color:var(--text-3);font-size:12.5px}
+.req{color:var(--safety)}
+.range{width:100%;accent-color:var(--ink)}
 
-.codes{margin-top:10px;border:1px solid #f0d2cd;background:#fffafa;border-radius:10px;padding:10px 12px}
-.codes h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--safety)}
-.code-opt{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:13.5px;cursor:pointer}
-.code-opt input{margin-top:3px;accent-color:var(--safety)}
-.code-opt .act{display:block;color:var(--muted);font-size:12.5px}
-.cat1{color:var(--safety)}.cat2{color:var(--policy)}.cat3{color:#8a6a00}.cat4{color:var(--info)}
-.code-opt select{max-width:100%}
-.guidance{margin-top:8px;font-size:13px;color:var(--sun-ink);background:var(--sun-soft);border-radius:8px;padding:7px 10px}
-.notes{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-height:38px;resize:vertical;background:#fcfcfa;font-size:14px}
-.qfoot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
-.spin{width:15px;height:15px;border:2px solid rgba(91,75,219,.25);border-top-color:var(--ai);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
-.btn .spin{border-color:rgba(255,255,255,.35);border-top-color:#fff}
-@keyframes sp{to{transform:rotate(360deg)}}
+/* ── Dialog ── */
+.overlay{position:fixed;inset:0;z-index:90;background:rgba(15,27,45,.42);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow-y:auto;animation:fade .18s ease}
+.dialog{width:100%;max-width:600px;background:var(--surface);border-radius:16px;box-shadow:var(--sh-3);animation:rise .22s var(--ease);border:1px solid rgba(15,27,45,.06)}
+.dialog.wide{max-width:980px}
+.dialog.narrow{max-width:440px}
+.dialog-head{display:flex;align-items:center;gap:12px;padding:18px 22px 0}
+.dialog-head h2{font-size:18px}
+.dialog-body{padding:16px 22px 20px}
+.dialog-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line);background:var(--sunken);border-radius:0 0 16px 16px}
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(8px) scale(.985)}}
+.dropzone{border:1.5px dashed var(--line-2);border-radius:var(--r-lg);padding:36px 20px;text-align:center;color:var(--text-2);background:var(--sunken);cursor:pointer;transition:border-color .15s,background .15s;width:100%}
+.dropzone:hover,.dropzone.over{border-color:#B87400;background:var(--accent-soft)}
+.dropzone svg{width:28px;height:28px;color:var(--text-2)}
+.dropzone b{display:block;color:var(--ink);margin:8px 0 2px;font-weight:600}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.check input{width:16px;height:16px;margin-top:2px;accent-color:var(--ink)}
+.progress-big{height:8px;border-radius:999px;background:#ECEEF2;overflow:hidden}
+.progress-big>i{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .3s var(--ease)}
+.plog{list-style:none;margin:14px 0 0;padding:0;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:var(--r);font-size:13px}
+.plog li{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border-top:1px solid var(--line)}
+.plog li:first-child{border-top:0}
+.plog .st{flex:none;width:74px;font-size:11.5px;font-weight:600}
+.plog .ok{color:var(--pass)}.plog .warn{color:var(--accent-text)}.plog .err{color:var(--safety)}.plog .info{color:var(--text-2)}
+.lightbox{width:100%;max-height:64vh;object-fit:contain;background:#0F1B2D;border-radius:12px;display:block}
+.tag{display:inline-flex;align-items:center;gap:4px;background:#F2F4F7;border-radius:8px;padding:4px 4px 4px 10px;font-size:13px;margin:3px 4px 3px 0}
+.tag button{width:22px;height:22px;display:grid;place-items:center;border:0;background:none;cursor:pointer;color:var(--text-2);border-radius:6px}
+.tag button:hover{background:#E4E7EC;color:var(--ink)}
+.tag svg{width:12px;height:12px}
+video.cam{width:100%;border-radius:12px;background:#000;max-height:58vh;display:block}
 
-.outcome-box{padding:10px 14px;border-radius:10px;font-weight:700;display:flex;gap:10px;align-items:center}
-.save-ind{font-size:12px;color:var(--muted)}
+/* ── Toasts ── */
+.toasts{position:fixed;right:20px;bottom:20px;z-index:120;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;max-width:calc(100% - 40px)}
+.toast{display:flex;gap:10px;align-items:flex-start;max-width:420px;background:var(--ink);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:var(--sh-3);font-size:14px;pointer-events:auto;animation:rise .2s var(--ease)}
+.toast svg{width:16px;height:16px;flex:none;margin-top:2px}
+.toast.ok svg{color:#5DD3A6}.toast.err svg{color:#FF8A7F}.toast svg{color:var(--accent)}
 
-/* Forms */
-.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.form .full{grid-column:1/-1}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--ink-2)}
-label.f input,label.f select,label.f textarea{padding:9px 10px;border:1px solid var(--line-2);border-radius:9px;background:#fff;font-weight:400}
-label.f .hint{font-weight:400;color:var(--muted);font-size:12px}
+/* ── Inspector ── */
+.ins-layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px;align-items:start}
+.ins-photos{display:flex;flex-wrap:wrap;gap:10px}
+.ins-photos .thumb,.ins-photos .add-tile{width:88px;height:88px}
+.verdict{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.verdict-word{font-size:22px;font-weight:650;letter-spacing:-.02em}
+.sev-safety .code{color:var(--safety)}.sev-policy .code{color:var(--policy)}
+.list-plain{margin:6px 0 0;padding-left:18px}
+.list-plain li{margin:3px 0}
+.history{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.history button{text-align:left;padding:16px;cursor:pointer;font:inherit;transition:box-shadow .15s}
+.history button:hover{box-shadow:var(--sh-2)}
 
-/* Modal */
-.modal-bg{position:fixed;inset:0;background:rgba(15,22,30,.55);z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow-y:auto}
-.modal{background:#fff;border-radius:14px;width:100%;max-width:640px;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
-.modal.wide{max-width:1000px}
-.modal .mh{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
-.modal .mh h2{margin:0;font-size:17px}
-.modal .mb{padding:16px}
-.modal .mf{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-.x{margin-left:auto;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+/* ── Settings ── */
+.settings-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:32px;padding:28px 0;border-top:1px solid var(--line)}
+.settings-grid:first-of-type{border-top:0;padding-top:0}
+.settings-grid h2{font-size:15px}
+.settings-grid p{color:var(--text-2);font-size:13.5px;margin-top:4px}
+ol.setup{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+ol.setup li{margin:6px 0}
+code{font-family:var(--mono);font-size:12.5px;background:#F2F4F7;padding:1px 6px;border-radius:5px}
 
-.drop{border:2px dashed var(--line-2);border-radius:12px;padding:28px 16px;text-align:center;color:var(--muted);background:#fafbf8;cursor:pointer}
-.drop.over{border-color:var(--sun);background:var(--sun-soft)}
-.prog{height:10px;background:#eceee8;border-radius:6px;overflow:hidden}
-.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ai),#8b7ff0);width:0;transition:width .25s}
-.log{max-height:220px;overflow:auto;font-size:12.5px;font-family:var(--mono);background:#f7f8f5;border-radius:8px;padding:8px;margin-top:10px;white-space:pre-wrap}
-
-.lb-img{width:100%;max-height:62vh;object-fit:contain;background:#111;border-radius:10px;display:block}
-.tag{display:inline-flex;align-items:center;gap:4px;background:#eef0ea;border-radius:7px;padding:3px 4px 3px 8px;font-size:12.5px;margin:2px}
-.tag button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 4px}
-
-video.cam{width:100%;border-radius:10px;background:#000;max-height:60vh}
-
-/* Inspector */
-.ins-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:14px}
-.sev-safety{border-left:3px solid var(--safety)}.sev-policy{border-left:3px solid var(--policy)}.sev-minor{border-left:3px solid var(--pnc)}
-
-/* Report */
-.report{font-size:13.5px}
-.report table{width:100%;border-collapse:collapse;margin:8px 0 16px}
-.report th,.report td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left;vertical-align:top}
-.report th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
-.report .r-head{display:flex;justify-content:space-between;gap:16px;border-bottom:3px solid var(--sun);padding-bottom:10px;margin-bottom:12px}
-.report .ph-grid{display:flex;gap:6px;flex-wrap:wrap}
-.report .ph-grid img{width:110px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
-.ans-Yes{color:var(--ok);font-weight:700}.ans-No{color:var(--safety);font-weight:700}
-
-#toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:520px}
-.toast{background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:14px;pointer-events:auto}
-.toast.err{background:var(--safety)}.toast.ok{background:var(--ok)}
-.banner{padding:12px 14px;border-radius:10px;background:var(--safety-soft);color:var(--safety);margin-bottom:12px;font-weight:600}
+/* ── Report ── */
+.report{font-size:13.5px;color:var(--ink)}
+.report table{width:100%;border-collapse:collapse;margin:10px 0 22px}
+.report th,.report td{border-bottom:1px solid var(--line);padding:8px 8px;text-align:left;vertical-align:top}
+.report th{font-size:12px;font-weight:600;color:var(--text-2);background:var(--sunken)}
+.report .sec-row td{background:var(--sunken);font-weight:600;font-size:13px}
+.r-head{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:16px;margin-bottom:16px;border-bottom:2px solid var(--ink)}
+.r-head .mono{font-size:24px;font-weight:600}
+.r-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 20px;margin-bottom:20px}
+.r-grid div{font-size:13px}
+.r-grid span{display:block;color:var(--text-2);font-size:12px}
+.report h3{margin:18px 0 6px}
+.ph-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ph-grid img{width:104px;height:104px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.ans-Yes{color:var(--pass);font-weight:600}.ans-No{color:var(--safety);font-weight:600}
 #printArea{display:none}
 
-@media (max-width:760px){
-  .top-in{flex-wrap:wrap;gap:8px}
-  nav.tabs{order:3;width:100%;margin-left:0}
-  .conn{margin-left:auto}
-  .form{grid-template-columns:1fr}
-  .stage-tabs{grid-template-columns:1fr 1fr 1fr;gap:6px}
-  .stage-tab{padding:8px}
-  .stage-tab .s{display:none}
-  .ans,.qbody{margin-left:0}
-  .ins-grid{grid-template-columns:1fr}
-  h1{font-size:20px}
-  .jhead .jn{font-size:18px}
+/* ── Responsive ── */
+@media (max-width:1060px){
+  .job-layout{grid-template-columns:1fr}
+  .aside{position:static;order:-1}
+  .tl-row{grid-template-columns:minmax(130px,1fr) minmax(160px,1.5fr) 140px 130px 140px}
+  .tl-row>:nth-child(3){display:none}
 }
+@media (max-width:760px){
+  body{font-size:15px}
+  .hdr{height:auto;padding:10px 16px;flex-wrap:wrap;gap:6px 12px}
+  .nav{order:3;width:100%;height:42px;margin:0 -8px;overflow-x:auto}
+  .conn span:last-child{display:none}
+  .page{padding:24px 16px 80px}
+  h1{font-size:24px}
+  .page-head .actions{margin-left:0;width:100%}
+  .page-head .actions .btn{flex:1}
+  .metrics{grid-template-columns:1fr 1fr}
+  .metric:nth-child(3){border-left:0}
+  .metric:nth-child(n+3){border-top:1px solid var(--line)}
+  .metric-value{font-size:26px}
+  .tl-head{display:none}
+  .tl-row{grid-template-columns:1fr auto;gap:6px 12px;padding:14px 16px}
+  .tl-row>:nth-child(3){display:none}
+  .tl-row>:nth-child(2){grid-column:1/-1;order:3}
+  .tl-row>:nth-child(4){grid-column:1/-1;order:4}
+  .tl-row>:nth-child(5){order:5}
+  .tl-row>:nth-child(6){order:2;justify-self:end}
+  .stepper{grid-template-columns:1fr 1fr 1fr;padding:4px}
+  .step{flex-direction:column;gap:8px;padding:10px}
+  .step-sub{display:none}
+  .q{padding:16px}
+  .q-inner{margin-left:0}
+  .q-head .q-num{width:22px}
+  .form-grid{grid-template-columns:1fr}
+  .ins-layout{grid-template-columns:1fr}
+  .settings-grid{grid-template-columns:1fr;gap:14px}
+  .steps-intro{grid-template-columns:1fr}
+  .r-grid{grid-template-columns:1fr 1fr}
+  .toasts{left:16px;right:16px;bottom:16px;align-items:stretch}
+  .dialog-foot .btn{flex:1}
+  .overlay{padding:16px 10px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 @media print{
-  body.print-report > *:not(#printArea){display:none!important}
+  body.print-report>*:not(#printArea){display:none!important}
   body.print-report #printArea{display:block!important}
   body{background:#fff}
-  .report .ph-grid img{width:90px;height:90px}
   .report tr{page-break-inside:avoid}
+  .ph-grid img{width:88px;height:88px}
 }
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="top-in">
-    <div class="brand" data-act="nav" data-view="dashboard">
-      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="24" cy="9" r="5" fill="#f5a524"/><g stroke="#f5a524" stroke-width="1.6" stroke-linecap="round"><path d="M24 1.5v1.8M31.5 9h-1.8M29.3 3.7l-1.3 1.3M18.7 3.7l1.3 1.3"/></g><path d="M3 30l5-14h20l-5 14z" fill="#2f6fae"/><path d="M8 16l-5 14M13 16l-3 14M18 16l-2 14M23 16l-1 14M5.5 23h20.5" stroke="#9cc3ea" stroke-width="1"/></svg>
-      <div>Automated Solar<small>AI installation audit</small></div>
-    </div>
-    <nav class="tabs">
-      <button data-act="nav" data-view="dashboard" id="nav-dashboard">Jobs</button>
-      <button data-act="nav" data-view="job" id="nav-job" class="hidden">Audit</button>
-      <button data-act="nav" data-view="inspector" id="nav-inspector">AI Inspector</button>
-      <button data-act="nav" data-view="settings" id="nav-settings">Settings</button>
+<a href="#main" class="sr-only">Skip to content</a>
+<header class="app-header">
+  <div class="hdr">
+    <button class="logo" data-act="nav" data-view="dashboard" aria-label="Automated Solar, go to audits">
+      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0F1B2D"/><circle cx="16" cy="13" r="5" fill="#F2A10C"/><path d="M7 25h18" stroke="#F2A10C" stroke-width="2.4" stroke-linecap="round"/><path d="M10 21h12" stroke="#F2A10C" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Automated Solar</span>
+    </button>
+    <nav class="nav" aria-label="Main">
+      <button class="navlink" data-act="nav" data-view="dashboard" id="nav-dashboard">Audits</button>
+      <button class="navlink hidden" data-act="nav" data-view="job" id="nav-job">Current job</button>
+      <button class="navlink" data-act="nav" data-view="inspector" id="nav-inspector">Photo check</button>
+      <button class="navlink" data-act="nav" data-view="settings" id="nav-settings">Settings</button>
     </nav>
-    <div class="conn"><span class="dot" id="connDot"></span><span id="connTxt">Connecting…</span></div>
+    <div class="hdr-right">
+      <div class="conn" role="status"><span class="conn-dot" id="connDot"></span><span id="connTxt">Connecting</span></div>
+      <button class="btn btn-accent btn-sm" data-act="newJob" id="hdrNew">New audit</button>
+      <button class="user-chip" data-act="changeName" title="Change your name"><span class="avatar" id="avatar">?</span></button>
+    </div>
   </div>
 </header>
 
-<main>
-  <section id="view-dashboard"></section>
-  <section id="view-job" class="hidden"></section>
-  <section id="view-inspector" class="hidden"></section>
-  <section id="view-settings" class="hidden"></section>
+<main id="main" class="page">
+  <section id="view-dashboard" aria-label="Audits"></section>
+  <section id="view-job" class="hidden" aria-label="Audit"></section>
+  <section id="view-inspector" class="hidden" aria-label="Photo check"></section>
+  <section id="view-settings" class="hidden" aria-label="Settings"></section>
 </main>
 
 <input type="file" id="pickFiles" accept="image/*" multiple class="hidden">
 <input type="file" id="pickCamera" accept="image/*" capture="environment" class="hidden">
 <div id="modalRoot"></div>
-<div id="toasts"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
 <div id="printArea"></div>
 
 <script type="module">
@@ -650,33 +839,59 @@ const clean = o => JSON.parse(JSON.stringify(o ?? null));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const imgSrc = p => p.img ? 'data:image/jpeg;base64,' + p.img : (p.url || '');
 
+const svg = (d, sw = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const I = {
-  cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
-  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
-  ai:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 2l1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8zM18 13l.9 2.6 2.6.9-2.6.9L18 20l-.9-2.6-2.6-.9 2.6-.9z"/></svg>',
-  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
-  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
-  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></svg>',
-  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>',
-  stack:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="13" rx="1.5"/><path d="M7 4h13a1 1 0 0 1 1 1v12"/><path d="M5 17l4-4 3 3 2-2 3 3"/></svg>'
+  cam:   svg('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>'),
+  up:    svg('<path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v4a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"/>'),
+  ai:    svg('<path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>', 1.6),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 2.2),
+  plus:  svg('<path d="M12 5v14M5 12h14"/>', 2),
+  chevL: svg('<path d="M15 5l-7 7 7 7"/>', 2),
+  chevR: svg('<path d="M9 5l7 7-7 7"/>', 2),
+  doc:   svg('<path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>'),
+  mail:  svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>'),
+  images:svg('<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/><path d="M3 15l4-4 3 3 2-2 5 5"/>'),
+  search:svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>', 2),
+  x:     svg('<path d="M6 6l12 12M18 6L6 18"/>', 2),
+  alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>', 2),
+  info:  svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>', 2),
+  edit:  svg('<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/>'),
+  trash: svg('<path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/>'),
+  play:  svg('<path d="M7 5l12 7-12 7z"/>'),
+  sun:   svg('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>'),
+  switchCam: svg('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><path d="M9 13.5a3 3 0 0 1 5.2-2M15 13.5a3 3 0 0 1-5.2 2"/>')
 };
 
-function toast(msg, type='', ms=3500) {
-  const el = document.createElement('div'); el.className = 'toast ' + type; el.textContent = msg;
+function toast(msg, type = '', ms = 4000) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type; el.setAttribute('role', type === 'err' ? 'alert' : 'status');
+  el.innerHTML = (type === 'ok' ? I.check : type === 'err' ? I.alert : I.info) + `<span>${esc(msg)}</span>`;
   $('#toasts').appendChild(el); setTimeout(() => el.remove(), ms);
 }
 
-/* ═════════════ MODAL ═════════════ */
-function openModal({ title, body, foot='', wide=false, onClose=null }) {
-  $('#modalRoot').innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal ${wide?'wide':''}" role="dialog" aria-modal="true">
-    <div class="mh"><h2>${title}</h2><button class="x" data-act="closeModal" aria-label="Close">×</button></div>
-    <div class="mb">${body}</div>${foot ? `<div class="mf">${foot}</div>` : ''}</div></div>`;
+/* ═════════════ DIALOG ═════════════ */
+let lastFocus = null;
+function openModal({ title, body, foot = '', size = '', onClose = null }) {
+  if (!$('#modalRoot').innerHTML) lastFocus = document.activeElement;
+  $('#modalRoot').innerHTML = `<div class="overlay" data-act="modalBg"><div class="dialog ${size}" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dialog-head"><h2 id="dlgTitle">${title}</h2><button class="icon-btn" style="margin-left:auto" data-act="closeModal" aria-label="Close">${I.x}</button></div>
+    <div class="dialog-body">${body}</div>${foot ? `<div class="dialog-foot">${foot}</div>` : ''}</div></div>`;
   S.modalOnClose = onClose;
+  requestAnimationFrame(() => { const f = $('#modalRoot .dialog-body input:not([type=hidden]):not([type=checkbox]), #modalRoot .dialog-body textarea, #modalRoot .dialog-foot .btn-primary, #modalRoot .dialog-foot .btn-accent'); (f || $('#modalRoot .icon-btn'))?.focus(); });
 }
 function closeModal() {
   const fn = S.modalOnClose; S.modalOnClose = null; $('#modalRoot').innerHTML = ''; if (fn) fn();
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus(); lastFocus = null;
 }
+function confirmDialog({ title, text, confirmLabel = 'Confirm', danger = false }) {
+  return new Promise(resolve => {
+    S.confirmResolve = resolve;
+    openModal({ title, size:'narrow', body:`<p class="muted">${text}</p>`,
+      foot:`<button class="btn" data-act="confirmNo">Cancel</button><button class="btn ${danger ? 'btn-primary' : 'btn-primary'}" data-act="confirmYes" ${danger ? 'style="background:var(--safety);border-color:var(--safety)"' : ''}>${esc(confirmLabel)}</button>`,
+      onClose: () => { if (S.confirmResolve) { S.confirmResolve(false); S.confirmResolve = null; } } });
+  });
+}
+const initials = n => (n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
 
 /* ═════════════ QUESTION LOGIC ═════════════ */
 function ans(qid) {
@@ -720,7 +935,7 @@ function computeOutcome(job) {
   if (hi === 1) { key='safety'; label='Safety Fail'; }
   else if (hi === 2) { key='policy'; label='Policy Fail'; }
   else if (hi === 3 || hi === 4) { key='pnc'; label='Pass with non-conformances (PNC)'; }
-  else { key='pass'; label = fails ? 'Pass – actions required' : 'Pass'; }
+  else { key='pass'; label = fails ? 'Fail – no CAT code selected' : 'Pass'; if (fails) key='pnc'; }
   return { key, label, highestCat: hi === 99 ? null : hi, codes, fails };
 }
 function summarise(job) {
@@ -741,20 +956,21 @@ function summarise(job) {
     stageProgress
   };
 }
-const outcomePill = (key, label) => `<span class="pill o-${key || 'none'}">${esc(label || 'Not started')}</span>`;
+const outcomePill = (key, label) => `<span class="badge o-${key || 'none'}">${esc(label || 'Not started')}</span>`;
 
 /* ═════════════ FIREBASE: JOBS ═════════════ */
-function setConn(ok, txt) { $('#connDot').className = 'dot ' + (ok ? 'ok' : 'bad'); $('#connTxt').textContent = txt; }
+function setConn(ok, txt) { $('#connDot').className = 'conn-dot ' + (ok ? 'ok' : 'bad'); $('#connTxt').textContent = txt; }
 
 function listenJobs() {
   const qy = query(collection(db, COL.jobs), orderBy('updatedAt', 'desc'), limit(400));
   onSnapshot(qy, snap => {
     S.jobs = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    setConn(true, 'Firebase live');
+    S.jobsLoaded = true; setConn(true, 'Connected');
     if (S.view === 'dashboard') renderDashboard();
+    if (S.view === 'inspector') renderInspector(true);
   }, err => {
     console.error(err); setConn(false, 'Offline');
-    $('#view-dashboard').innerHTML = `<div class="banner">Could not load jobs from Firestore (${esc(err.code || err.message)}). Check your Firestore rules allow the "${COL.jobs}" collection.</div>`;
+    S.jobsLoaded = true; $('#view-dashboard').innerHTML = `<div class="alert">${I.alert}<span>Audits could not be loaded from Firebase (${esc(err.code || err.message)}). Check that the Firestore rules allow reads on the "${COL.jobs}" collection, then reload the page.</span></div>`;
   });
 }
 
@@ -969,7 +1185,7 @@ function parseJSON(t) {
 function aiErrorText(e) {
   const m = String(e.message || e);
   if (/api-not-enabled|firebasevertexai|firebaseml|AI Logic|PERMISSION_DENIED|403/i.test(m) && S.settings.provider !== 'claude')
-    return 'Firebase AI Logic is not enabled for this project. In the Firebase console open "AI Logic" → Get started → choose the Gemini Developer API. (' + m.slice(0,120) + ')';
+    return 'Firebase AI Logic is not enabled for this project. In the Firebase console open Build, then AI Logic, choose Get started and pick the Gemini Developer API. (' + m.slice(0,120) + ')';
   if (/not found|404/i.test(m)) return 'AI model not found – check the model name in Settings. (' + m.slice(0,120) + ')';
   return m.slice(0, 260);
 }
@@ -1032,242 +1248,291 @@ async function pool(items, n, fn) {
   await Promise.all(Array.from({ length: Math.min(n, items.length) }, run));
 }
 
-/* ═════════════ PROGRESS MODAL ═════════════ */
+/* ═════════════ PROGRESS DIALOG ═════════════ */
 function openProgress(title) {
   S.cancel = false;
-  openModal({ title, body:`<div class="prog"><i id="progBar"></i></div><div class="row" style="margin-top:8px"><span id="progTxt" class="sub" style="margin:0">Starting…</span></div><div class="log" id="progLog"></div>`,
-    foot:`<button class="btn" data-act="cancelProg" id="progCancel">Stop</button><button class="btn dark hidden" data-act="closeModal" id="progDone">Done</button>` });
+  openModal({ title, body:`<div class="row" style="justify-content:space-between;margin-bottom:8px"><span id="progTxt" class="muted small">Starting</span><span id="progPct" class="small mono">0%</span></div>
+      <div class="progress-big" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="progRole"><i id="progBar"></i></div><ul class="plog" id="progLog" aria-live="polite"></ul>`,
+    foot:`<button class="btn" data-act="cancelProg" id="progCancel">Stop</button><button class="btn btn-primary hidden" data-act="closeModal" id="progDone">Done</button>` });
 }
-function prog(done, total, txt) { const b = $('#progBar'); if (b) b.style.width = (total ? done/total*100 : 0) + '%'; const t = $('#progTxt'); if (t) t.textContent = txt || `${done} / ${total}`; }
-function plog(line) { const l = $('#progLog'); if (l) { l.textContent += line + '\n'; l.scrollTop = l.scrollHeight; } }
-function progFinish(txt) { prog(1,1,txt); $('#progCancel')?.classList.add('hidden'); $('#progDone')?.classList.remove('hidden'); }
+function prog(done, total, txt) {
+  const pc = total ? Math.round(done / total * 100) : 0;
+  const b = $('#progBar'); if (b) b.style.width = pc + '%';
+  $('#progRole')?.setAttribute('aria-valuenow', pc);
+  if ($('#progPct')) $('#progPct').textContent = pc + '%';
+  if ($('#progTxt')) $('#progTxt').textContent = txt || `${done} of ${total}`;
+}
+function plog(status, text, cls = 'info') {
+  const l = $('#progLog'); if (!l) return;
+  l.insertAdjacentHTML('beforeend', `<li><span class="st ${cls}">${esc(status)}</span><span>${esc(text)}</span></li>`); l.scrollTop = l.scrollHeight;
+}
+function progFinish(txt) { prog(1, 1, txt); $('#progCancel')?.classList.add('hidden'); const d = $('#progDone'); if (d) { d.classList.remove('hidden'); d.focus(); } }
 
-/* ═════════════ VIEW: DASHBOARD ═════════════ */
+/* ═════════════ VIEW: AUDITS (DASHBOARD) ═════════════ */
 function renderDashboard() {
+  const el = $('#view-dashboard');
+  if (!S.jobsLoaded) { el.innerHTML = `<div class="loading"><span class="spin"></span>Loading audits</div>`; return; }
   const jobs = S.jobs;
-  const needsJobs = jobs.filter(j => (j.needsReview || 0) > 0 && j.status !== 'Complete');
-  const completed = jobs.filter(j => j.status === 'Complete');
-  const safety = jobs.filter(j => j.outcome === 'safety').length;
-  const totAns = jobs.reduce((s,j) => s + (j.answeredQ || 0), 0);
-  const totAi = jobs.reduce((s,j) => s + (j.aiAccepted || 0), 0);
+  const open = jobs.filter(j => j.status !== 'Complete');
+  const queue = open.filter(j => (j.needsReview || 0) > 0).sort((a, b) => b.needsReview - a.needsReview);
+  const totAns = jobs.reduce((s, j) => s + (j.answeredQ || 0), 0);
+  const totAi = jobs.reduce((s, j) => s + (j.aiAccepted || 0), 0);
   const aiPct = totAns ? Math.round(totAi / totAns * 100) : 0;
+  const safety = jobs.filter(j => j.outcome === 'safety' && j.answeredQ).length;
+
+  const head = `<div class="page-head"><div><h1>Audits</h1><p>Every installation from pre-install to handover. AI clears the checks it can verify from photos and leaves the rest for you.</p></div></div>`;
+
+  if (!jobs.length) {
+    el.innerHTML = head + `<div class="panel empty-state">
+      <div class="empty-icon">${I.sun}</div>
+      <h3>Start your first audit</h3>
+      <p>Create an audit for an installation, add the site photos, and let AI review them against the checklist.</p>
+      <button class="btn btn-primary" data-act="newJob">${I.plus}New audit</button>
+      <div class="steps-intro">
+        <div><b><span>1</span>Create the audit</b><span class="muted">Job number, customer and the system that was installed.</span></div>
+        <div><b><span>2</span>Add site photos</b><span class="muted">Upload them all at once. AI files each photo under the right check.</span></div>
+        <div><b><span>3</span>Review what's flagged</b><span class="muted">Confident passes are cleared for you. Confirm the rest and send the report.</span></div>
+      </div></div>`;
+    return;
+  }
+
   const sq = S.jobSearch.toLowerCase();
   const list = jobs.filter(j => {
-    if (sq && ![j.jobNumber, j.customer, j.postcode, j.installer, j.address].some(v => String(v||'').toLowerCase().includes(sq))) return false;
-    if (S.jobOutcome && j.outcome !== S.jobOutcome) return false;
-    if (S.jobStatus === 'needs' && !((j.needsReview||0) > 0 && j.status !== 'Complete')) return false;
+    if (sq && ![j.jobNumber, j.customer, j.postcode, j.installer, j.address].some(v => String(v || '').toLowerCase().includes(sq))) return false;
+    if (S.jobOutcome && !(j.outcome === S.jobOutcome && j.answeredQ)) return false;
+    if (S.jobStatus === 'needs' && !((j.needsReview || 0) > 0 && j.status !== 'Complete')) return false;
     if (S.jobStatus === 'progress' && j.status === 'Complete') return false;
     if (S.jobStatus === 'complete' && j.status !== 'Complete') return false;
     return true;
   });
-  $('#view-dashboard').innerHTML = `
-    <div class="row" style="margin-bottom:14px;align-items:flex-end">
-      <div><h1>Installation audits</h1><p class="sub" style="margin:0">Pre-install → installation → post-install. The AI clears the evidence it's confident about and sends the rest to an auditor.</p></div>
-      <div class="spacer"></div>
-      <button class="btn pri" data-act="newJob">${I.plus} New job</button>
+  const filtered = sq || S.jobOutcome || S.jobStatus;
+
+  el.innerHTML = head + `
+    <div class="panel metrics">
+      <div class="metric"><div class="metric-label">Open audits</div><div class="metric-value">${open.length}</div><div class="metric-note">${jobs.length - open.length} completed</div></div>
+      <div class="metric"><div class="metric-label">Waiting for review</div><div class="metric-value ${queue.length ? 'accent' : ''}">${queue.length}</div><div class="metric-note">${queue.reduce((s, j) => s + j.needsReview, 0)} checks flagged by AI</div></div>
+      <div class="metric"><div class="metric-label">Cleared by AI</div><div class="metric-value">${aiPct}%</div><div class="metric-note">${totAi} of ${totAns} answered checks</div></div>
+      <div class="metric"><div class="metric-label">Safety fails</div><div class="metric-value" ${safety ? 'style="color:var(--safety)"' : ''}>${safety}</div><div class="metric-note">Audits with a CAT 1 code</div></div>
     </div>
-    <div class="stats">
-      <div class="card stat accent"><div class="k">Jobs</div><div class="v">${jobs.length}</div><div class="h">${jobs.length - completed.length} open · ${completed.length} complete</div></div>
-      <div class="card stat warn"><div class="k">Awaiting auditor</div><div class="v">${needsJobs.length}</div><div class="h">${jobs.reduce((s,j)=>s+((j.status!=='Complete'&&j.needsReview)||0),0)} checks flagged for review</div></div>
-      <div class="card stat aiacc"><div class="k">Cleared by AI</div><div class="v">${aiPct}%</div><div class="h">${totAi} of ${totAns} answered checks</div></div>
-      <div class="card stat bad"><div class="k">Safety fails</div><div class="v">${safety}</div><div class="h">Jobs with a CAT 1 code</div></div>
-    </div>
-    <div class="filters">
-      <input type="search" placeholder="Search job number, customer, postcode, installer…" value="${esc(S.jobSearch)}" data-on="jobSearch">
-      <select data-on="jobStatus">
+    ${queue.length ? `<div class="section-label"><h2>Waiting for your review</h2><span>Sorted by checks outstanding</span></div>
+      <div class="queue">${queue.slice(0, 6).map(j => `<button class="panel queue-item" data-act="openJob" data-id="${j.id}" data-filter="needs">
+        <div class="row"><span class="mono" style="font-weight:600">${esc(j.jobNumber)}</span><span class="grow"></span><span class="muted small">${esc(j.installer || '')}</span></div>
+        <div class="n" style="margin-top:8px">${j.needsReview} <span class="small muted" style="font-weight:500;letter-spacing:0">check${j.needsReview > 1 ? 's' : ''} to review</span></div>
+        <div class="muted small" style="margin-top:2px">${esc(j.customer || 'Customer not set')}${j.postcode ? ', ' + esc(j.postcode) : ''}</div></button>`).join('')}</div>` : ''}
+    <div class="section-label"><h2>All audits</h2><span>${list.length} of ${jobs.length}</span></div>
+    <div class="toolbar">
+      <label class="search"><span class="sr-only">Search audits</span>${I.search}<input class="input" type="search" placeholder="Search job, customer, postcode or installer" value="${esc(S.jobSearch)}" data-on="jobSearch"></label>
+      <label><span class="sr-only">Status</span><select class="select" data-on="jobStatus">
         <option value="">All statuses</option>
-        <option value="needs" ${S.jobStatus==='needs'?'selected':''}>Awaiting auditor review</option>
-        <option value="progress" ${S.jobStatus==='progress'?'selected':''}>In progress</option>
-        <option value="complete" ${S.jobStatus==='complete'?'selected':''}>Complete</option>
-      </select>
-      <select data-on="jobOutcome">
+        <option value="needs" ${S.jobStatus === 'needs' ? 'selected' : ''}>Waiting for review</option>
+        <option value="progress" ${S.jobStatus === 'progress' ? 'selected' : ''}>In progress</option>
+        <option value="complete" ${S.jobStatus === 'complete' ? 'selected' : ''}>Completed</option></select></label>
+      <label><span class="sr-only">Outcome</span><select class="select" data-on="jobOutcome">
         <option value="">All outcomes</option>
-        ${[['pass','Pass'],['pnc','PNC'],['policy','Policy fail'],['safety','Safety fail']].map(([v,l]) => `<option value="${v}" ${S.jobOutcome===v?'selected':''}>${l}</option>`).join('')}
-      </select>
+        ${[['pass', 'Pass'], ['pnc', 'Pass with non-conformances'], ['policy', 'Policy fail'], ['safety', 'Safety fail']].map(([v, l]) => `<option value="${v}" ${S.jobOutcome === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     </div>
-    ${list.length ? `<div class="jobs">${list.map(jobCard).join('')}</div>` : `<div class="card empty">${jobs.length ? 'No jobs match these filters.' : 'No jobs yet. Create one to start auditing.'}</div>`}`;
+    <div class="panel tl">
+      <div class="tl-row tl-head" aria-hidden="true"><div>Job</div><div>Customer</div><div>Installer</div><div>Progress</div><div>Review</div><div>Outcome</div></div>
+      <div class="tl-body" role="list">${list.length ? list.map(jobRow).join('') : `<div class="empty-state" style="padding:40px 20px"><h3 style="margin-top:0">No audits match these filters</h3><p>Try a different search, or clear the filters to see every audit.</p>${filtered ? '<button class="btn" data-act="clearFilters">Clear filters</button>' : ''}</div>`}</div>
+    </div>`;
 }
-function jobCard(j) {
+function jobRow(j) {
   const sp = j.stageProgress || {};
-  return `<div class="card job" data-act="openJob" data-id="${j.id}">
-    <div class="row"><span class="jn">#${esc(j.jobNumber)}</span><div class="spacer"></div>${j.status === 'Complete' ? '<span class="pill o-info">Complete</span>' : ''}${outcomePill(j.answeredQ ? j.outcome : '', j.answeredQ ? (j.outcome === 'pnc' ? 'PNC' : j.outcomeLabel) : 'Not started')}</div>
-    <div style="font-weight:600;margin-top:4px">${esc(j.customer || 'Customer not set')}</div>
-    <div class="meta">${esc([j.postcode, j.installer, j.systemType].filter(Boolean).join(' · ') || '—')}</div>
-    <div class="meta">Install ${fmtDate(j.installDate)} · updated ${fmtDT(j.updatedAt)}</div>
-    <div class="mini-stages">${STAGES.map(s => { const p = sp[s.id] || {answered:0,total:0}; const pc = p.total ? Math.round(p.answered/p.total*100) : 0; return `<div>${s.label} ${pc}%<div class="bar"><i style="width:${pc}%"></i></div></div>`; }).join('')}</div>
-    ${(j.needsReview && j.status !== 'Complete') ? `<div style="margin-top:8px"><span class="pill o-needs">${j.needsReview} check${j.needsReview>1?'s':''} need review</span> ${j.aiAccepted ? `<span class="pill o-ai">${j.aiAccepted} AI-cleared</span>` : ''}</div>` : (j.aiAccepted ? `<div style="margin-top:8px"><span class="pill o-ai">${j.aiAccepted} AI-cleared</span></div>` : '')}
+  const outcome = j.answeredQ ? outcomePill(j.outcome, j.outcome === 'pnc' ? 'Pass with NCs' : (j.outcome === 'pass' ? 'Pass' : j.outcomeLabel)) : `<span class="badge o-none">Not started</span>`;
+  const review = j.status === 'Complete' ? `<span class="badge o-done plain">Completed</span>`
+    : j.needsReview ? `<span class="badge o-review">${j.needsReview} to review</span>`
+    : j.answeredQ ? `<span class="badge o-none">Up to date</span>` : `<span class="muted small">No answers yet</span>`;
+  return `<div class="tl-row" role="listitem" tabindex="0" data-act="openJob" data-id="${j.id}" aria-label="Open audit ${esc(j.jobNumber)}">
+    <div><div class="tl-job">${esc(j.jobNumber)}</div><div class="tl-sub">${j.installDate ? 'Installed ' + fmtDate(j.installDate) : 'Updated ' + fmtDate(j.updatedAt)}</div></div>
+    <div style="min-width:0"><div class="tl-main">${esc(j.customer || 'Customer not set')}</div><div class="tl-sub">${esc([j.address, j.postcode].filter(Boolean).join(', ') || '')}</div></div>
+    <div style="min-width:0"><div class="tl-main" style="font-weight:500">${esc(j.installer || '')}</div><div class="tl-sub">${esc(j.systemType || '')}</div></div>
+    <div><div class="seg3" title="Pre-install, installation, post-install">${STAGES.map(s => { const p = sp[s.id] || { answered: 0, total: 0 }; const pc = p.total ? Math.round(p.answered / p.total * 100) : 0; return `<div class="track"><i class="${pc === 100 ? 'done' : ''}" style="width:${pc}%"></i></div>`; }).join('')}</div>
+      <div class="tl-sub" style="margin-top:6px">${j.answeredQ || 0} of ${j.totalQ || QUESTIONS.length} checks</div></div>
+    <div>${review}</div>
+    <div>${outcome}</div>
   </div>`;
 }
 
 function jobForm(j = {}) {
-  const f = (k, label, type='text', extra='') => `<label class="f">${label}<input type="${type}" name="${k}" value="${esc(j[k] ?? '')}" ${extra}></label>`;
-  return `<form id="jobForm" class="form" onsubmit="return false">
-    ${f('jobNumber','Job number *','text','required')}
-    ${f('installDate','Install date','date')}
-    ${f('customer','Customer name')}
-    ${f('postcode','Postcode')}
-    <label class="f full">Address<input name="address" value="${esc(j.address||'')}"></label>
-    ${f('installer','Installer / team')}
-    <label class="f">System type<select name="systemType">${['PV + Battery','PV only','Battery only'].map(o => `<option ${j.systemType===o?'selected':''}>${o}</option>`).join('')}</select></label>
-    ${f('panelCount','No. of panels','number','min="0"')}
-    ${f('panelModel','Panel model')}
-    ${f('inverter','Inverter (make / size)')}
-    ${f('battery','Battery (make / kWh)')}
-    <label class="f full">Design notes / anything the AI should know<textarea name="jobNotes" rows="2">${esc(j.jobNotes||'')}</textarea><span class="hint">e.g. "2 arrays: front 8 panels, rear 4. Bonding required per OES-TBT-119."</span></label>
+  const f = (k, label, type = 'text', extra = '', hint = '') => `<label class="field">${label}<input class="input" type="${type}" name="${k}" value="${esc(j[k] ?? '')}" ${extra}>${hint ? `<span class="hint">${hint}</span>` : ''}</label>`;
+  return `<form id="jobForm" class="form-grid" novalidate>
+    <div id="formMsg" class="full hidden"></div>
+    ${f('jobNumber', 'Job number <span class="req" aria-hidden="true">*</span>', 'text', 'required autocomplete="off"')}
+    ${f('installDate', 'Install date', 'date')}
+    ${f('customer', 'Customer name', 'text', 'autocomplete="off"')}
+    ${f('postcode', 'Postcode', 'text', 'autocomplete="off"')}
+    <label class="field full">Address<input class="input" name="address" value="${esc(j.address || '')}" autocomplete="off"></label>
+    ${f('installer', 'Installer or team')}
+    <label class="field">System type<select class="select" name="systemType">${['PV + Battery', 'PV only', 'Battery only'].map(o => `<option ${j.systemType === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
+    ${f('panelCount', 'Number of panels', 'number', 'min="0" inputmode="numeric"')}
+    ${f('panelModel', 'Panel model')}
+    ${f('inverter', 'Inverter', 'text', '', 'Make and size, e.g. GivEnergy 5 kW hybrid')}
+    ${f('battery', 'Battery', 'text', '', 'Make and capacity, e.g. GivEnergy 9.5 kWh')}
+    <label class="field full">Notes for the AI reviewer<textarea name="jobNotes" rows="2">${esc(j.jobNotes || '')}</textarea><span class="hint">Anything that changes what good looks like, e.g. two arrays (front 8, rear 4) or bonding required under OES-TBT-119.</span></label>
   </form>`;
 }
-function readJobForm() {
-  const fd = new FormData($('#jobForm')); const o = {};
-  fd.forEach((v,k) => o[k] = String(v).trim());
-  return o;
-}
+function readJobForm() { const fd = new FormData($('#jobForm')); const o = {}; fd.forEach((v, k) => o[k] = String(v).trim()); return o; }
+function formError(msg) { const m = $('#formMsg'); m.className = 'full alert'; m.innerHTML = I.alert + `<span>${msg}</span>`; }
 
-/* ═════════════ VIEW: JOB / AUDIT ═════════════ */
-async function openJob(id) {
+/* ═════════════ VIEW: AUDIT ═════════════ */
+async function openJob(id, filter = 'all') {
   const j = S.jobs.find(x => x.id === id);
-  if (!j) { toast('Job not found', 'err'); return; }
-  S.job = JSON.parse(JSON.stringify(j)); S.photos = []; S.filter = 'all'; S.stage = S.stage || 'pre';
+  if (!j) { toast('That audit could not be found. It may have been deleted.', 'err'); return; }
+  if (S.job && S.job.id !== id && (S.dirty.size || S.dirtyMeta)) await saveJob();
+  if (!S.job || S.job.id !== id) S.stage = 'pre';
+  S.job = JSON.parse(JSON.stringify(j)); S.photos = []; S.filter = filter;
   S.dirty.clear(); S.dirtyMeta = false;
+  if (filter === 'needs') { const first = STAGES.find(s => visibleQs(S.job, s.id).some(q => reviewState(q) === 'needs')); if (first) S.stage = first.id; }
   showView('job');
-  $('#view-job').innerHTML = '<div class="empty"><span class="spin"></span> Loading job…</div>';
-  try { await loadPhotos(id); } catch (e) { toast('Could not load photos: ' + (e.code || e.message), 'err'); }
+  $('#view-job').innerHTML = `<div class="loading"><span class="spin"></span>Loading audit</div>`;
+  try { await loadPhotos(id); } catch (e) { toast('Photos could not be loaded: ' + (e.code || e.message), 'err'); }
   renderJob();
 }
 
 function renderJob() {
-  const j = S.job; if (!j) { $('#view-job').innerHTML = '<div class="empty">No job open.</div>'; return; }
-  const unsorted = S.photos.filter(p => !(p.qIds || []).length);
+  const j = S.job; if (!j) { $('#view-job').innerHTML = ''; return; }
   $('#view-job').innerHTML = `
-    <div class="row" style="margin-bottom:10px"><button class="btn ghost sm" data-act="nav" data-view="dashboard">${I.back} All jobs</button><div class="spacer"></div><span class="save-ind" id="saveInd">${j.updatedAt ? 'Saved ' + fmtDT(j.updatedAt) : ''}</span></div>
-    <div class="card jhead" id="jhead"></div>
-    <div class="stage-tabs" id="stageTabs"></div>
-    <div class="toolbar">
-      <div class="chips" id="filterChips"></div>
-      <div class="spacer"></div>
-      ${unsorted.length ? `<button class="btn sm" data-act="viewUnsorted">${unsorted.length} unsorted photo${unsorted.length>1?'s':''}</button>` : ''}
-      <button class="btn ai-o sm" data-act="runAll" data-scope="stage">${I.ai} AI check this stage</button>
+    <nav class="crumbs" aria-label="Breadcrumb"><button data-act="nav" data-view="dashboard">Audits</button>${I.chevR}<span class="mono" aria-current="page">${esc(j.jobNumber)}</span><span class="grow"></span><span id="saveInd" class="small" role="status">${j.updatedAt ? 'Saved' : ''}</span></nav>
+    <div class="job-title">
+      <div class="grow"><h1>${esc(j.jobNumber)}</h1>
+        <div class="job-meta">${[j.customer && `<b>${esc(j.customer)}</b>`, [j.address, j.postcode].filter(Boolean).map(esc).join(', '), j.installer && `Installed by ${esc(j.installer)}`, j.installDate && fmtDate(j.installDate)].filter(Boolean).map(x => `<span>${x}</span>`).join('')}</div></div>
+      <button class="btn" data-act="editJob">${I.edit}Edit details</button>
     </div>
-    <div id="qlist"></div>`;
+    <div class="job-layout">
+      <div>
+        <div class="panel stepper" role="tablist" aria-label="Audit stages" id="stepper"></div>
+        <div class="toolbar">
+          <div class="segmented" role="group" aria-label="Filter checks" id="filterSeg"></div>
+          <span class="grow"></span>
+          <button class="btn btn-sm" data-act="runAll" data-scope="stage">${I.ai}Run AI review on this stage</button>
+        </div>
+        <div id="qlist"></div>
+      </div>
+      <aside class="aside" id="aside" aria-label="Audit summary"></aside>
+    </div>`;
   updateJobHeader(); renderQuestions();
 }
 
 function updateJobHeader() {
-  const j = S.job; if (!j || !$('#jhead')) return;
-  const sum = summarise(j); const o = computeOutcome(j);
-  $('#jhead').innerHTML = `
-    <div class="top-line">
-      <div><div class="jn">#${esc(j.jobNumber)}</div><div style="font-weight:600">${esc(j.customer || '')}${j.postcode ? ' · ' + esc(j.postcode) : ''}</div></div>
-      <div class="spacer"></div>
-      <div class="row">
-        <button class="btn sm" data-act="editJob">Edit details</button>
-        <button class="btn ai sm" data-act="bulkUpload">${I.stack} Drop site photos (AI sorts)</button>
-        <button class="btn ai-o sm" data-act="runAll" data-scope="job">${I.ai} AI check whole job</button>
-        <button class="btn dark sm" data-act="report">${I.doc} Report</button>
+  const j = S.job; if (!j || !$('#aside')) return;
+  const sum = summarise(j), o = computeOutcome(j);
+  const unsorted = S.photos.filter(p => !(p.qIds || []).length).length;
+  const key = sum.answeredQ ? o.key : 'none';
+  $('#aside').innerHTML = `
+    <div class="panel">
+      <div class="outcome"><div class="outcome-label">Current outcome</div><div class="outcome-value k-${key}">${esc(sum.answeredQ ? o.label : 'Not started')}</div>
+        <div class="track" style="margin-top:12px" title="${sum.answeredQ} of ${sum.totalQ} checks answered"><i style="width:${sum.totalQ ? sum.answeredQ / sum.totalQ * 100 : 0}%"></i></div>
+        <div class="small muted" style="margin-top:6px">${sum.answeredQ} of ${sum.totalQ} checks answered</div></div>
+      ${sum.needsReview && j.status !== 'Complete' ? `<div class="review-callout"><b>${sum.needsReview} check${sum.needsReview > 1 ? 's' : ''} need${sum.needsReview > 1 ? '' : 's'} you</b><p>AI couldn't confirm these from the photos, or found a defect.</p><button class="btn btn-primary btn-sm btn-block" data-act="reviewNow">Review now</button></div>` : ''}
+      <ul class="facts">
+        <li><span>Cleared by AI</span><b>${sum.aiAccepted}</b></li>
+        <li><span>Verified by an auditor</span><b>${sum.humanVerified}</b></li>
+        <li><span>Photos</span><b>${S.photos.length}</b></li>
+        ${unsorted ? `<li><span>Not assigned to a check</span><button class="btn btn-quiet btn-sm" data-act="viewUnsorted" style="margin-right:-10px">${unsorted} to assign</button></li>` : ''}
+      </ul>
+      <div class="aside-actions">
+        <button class="btn btn-accent" data-act="bulkUpload">${I.images}Upload site photos</button>
+        <button class="btn" data-act="runAll" data-scope="job">${I.ai}Run AI review on all checks</button>
+        <button class="btn" data-act="report">${I.doc}View report</button>
+        ${j.status === 'Complete'
+          ? `<div class="small muted" style="text-align:center;padding-top:4px">Completed by ${esc(j.completedBy || '')} on ${fmtDate(j.completedAt)}</div><button class="btn btn-quiet btn-sm" data-act="reopen">Reopen audit</button>`
+          : `<button class="btn btn-primary" data-act="completeAudit">${I.check}Complete audit</button>`}
       </div>
     </div>
-    <div class="kv">
-      <div><b>System</b>${esc(j.systemType || '—')}</div>
-      <div><b>Panels</b>${esc([j.panelCount, j.panelModel].filter(Boolean).join(' × ') || '—')}</div>
-      <div><b>Inverter</b>${esc(j.inverter || '—')}</div>
-      <div><b>Battery</b>${esc(j.battery || '—')}</div>
-      <div><b>Installer</b>${esc(j.installer || '—')}</div>
-      <div><b>Install date</b>${fmtDate(j.installDate)}</div>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <div class="outcome-box o-${sum.answeredQ ? o.key : 'none'}">${esc(sum.answeredQ ? o.label : 'Not started')}</div>
-      <span class="pill o-info">${sum.answeredQ}/${sum.totalQ} answered</span>
-      <span class="pill o-ai">${sum.aiAccepted} AI-cleared</span>
-      <span class="pill o-needs">${sum.needsReview} need review</span>
-      <span class="pill o-none">${sum.humanVerified} auditor-verified</span>
-      <div class="spacer"></div>
-      ${j.status === 'Complete' ? `<span class="pill o-info">Audit complete · ${esc(j.completedBy||'')} ${fmtDate(j.completedAt)}</span> <button class="btn sm" data-act="reopen">Reopen</button>` : `<button class="btn ok sm" data-act="completeAudit">${I.check} Complete audit</button>`}
+    <div class="panel">
+      <div class="panel-head"><h3>System</h3></div>
+      <ul class="facts">
+        <li><span>Type</span><b style="font-weight:500">${esc(j.systemType || 'Not set')}</b></li>
+        <li><span>Panels</span><b style="font-weight:500">${esc([j.panelCount, j.panelModel].filter(Boolean).join(' x ') || 'Not set')}</b></li>
+        <li><span>Inverter</span><b style="font-weight:500">${esc(j.inverter || 'Not set')}</b></li>
+        <li><span>Battery</span><b style="font-weight:500">${esc(j.battery || 'Not set')}</b></li>
+      </ul>
     </div>`;
-  $('#stageTabs').innerHTML = STAGES.map(s => {
-    const p = sum.stageProgress[s.id];
-    return `<button class="stage-tab ${S.stage===s.id?'on':''}" data-act="stage" data-stage="${s.id}">
-      <div class="t">${s.label}<span class="cnt">${p.answered}/${p.total}</span></div>
-      <div class="s">${s.sub}</div>
-      <div class="bar"><i style="width:${p.total ? p.answered/p.total*100 : 0}%"></i></div>
-      ${p.needs ? `<div style="margin-top:5px"><span class="pill o-needs">${p.needs} to review</span></div>` : ''}
-    </button>`;
+  $('#stepper').innerHTML = STAGES.map((s, i) => {
+    const p = sum.stageProgress[s.id]; const done = p.total && p.answered === p.total && !p.needs;
+    return `<button class="step" role="tab" aria-selected="${S.stage === s.id}" data-act="stage" data-stage="${s.id}">
+      <span class="step-num ${done && S.stage !== s.id ? 'complete' : ''}">${done && S.stage !== s.id ? I.check : i + 1}</span>
+      <span class="step-body"><span class="step-title">${s.label}<span>${p.answered}/${p.total}</span></span>
+        <span class="step-sub" style="display:block">${s.sub}</span>
+        <span class="track" style="display:block"><i style="width:${p.total ? p.answered / p.total * 100 : 0}%"></i></span>
+        ${p.needs ? `<span class="flag" style="display:block">${p.needs} to review</span>` : ''}</span></button>`;
   }).join('');
   const qs = visibleQs(j, S.stage);
-  const counts = { all: qs.length, needs: qs.filter(q => reviewState(q)==='needs').length, unanswered: qs.filter(q => !peek(j,q.id)?.answer).length, fails: qs.filter(q => isFail(q)).length, nophoto: qs.filter(q => !photosFor(q.id).length).length };
-  $('#filterChips').innerHTML = [['all','All'],['needs','Needs review'],['unanswered','Unanswered'],['fails','Fails'],['nophoto','No photos']]
-    .map(([k,l]) => `<button class="chip ${S.filter===k?'on':''}" data-act="filter" data-f="${k}">${l} (${counts[k]})</button>`).join('');
+  const counts = { all: qs.length, needs: qs.filter(q => reviewState(q) === 'needs').length, unanswered: qs.filter(q => !peek(j, q.id)?.answer).length, fails: qs.filter(q => isFail(q)).length, nophoto: qs.filter(q => !photosFor(q.id).length).length };
+  $('#filterSeg').innerHTML = [['all', 'All'], ['needs', 'Needs review'], ['unanswered', 'Unanswered'], ['fails', 'Failed'], ['nophoto', 'No photos']]
+    .map(([k, l]) => `<button aria-pressed="${S.filter === k}" data-act="filter" data-f="${k}">${l}<span class="count">${counts[k]}</span></button>`).join('');
 }
 
 function renderQuestions() {
-  const j = S.job;
   let html = '';
   SECTIONS.filter(s => s.stage === S.stage).forEach(sec => {
     const items = sec.items.filter(q => !isHidden(q) && passFilter(q));
     if (!items.length) return;
-    html += `<div class="sec-title">${esc(sec.title)}</div>` + items.map(cardHTML).join('');
+    html += `<section class="panel q-section" aria-label="${esc(sec.title)}"><div class="panel-head"><h3>${esc(sec.title)}</h3><span class="grow"></span><span class="small muted">${items.length} check${items.length > 1 ? 's' : ''}</span></div><div class="q-list">${items.map(cardHTML).join('')}</div></section>`;
   });
-  $('#qlist').innerHTML = html || `<div class="card empty">Nothing here for this filter.</div>`;
+  const emptyMsg = { needs: ['Nothing to review here', 'Every check in this stage is either cleared or verified.'], unanswered: ['All checks answered', 'Every check in this stage has an answer.'], fails: ['No failed checks', 'Nothing in this stage has been marked as failed.'], nophoto: ['Every check has photos', 'Each check in this stage has at least one photo.'] }[S.filter] || ['No checks', 'There are no checks for this stage.'];
+  $('#qlist').innerHTML = html || `<div class="panel empty-state"><div class="empty-icon">${I.check}</div><h3>${emptyMsg[0]}</h3><p>${emptyMsg[1]}</p><button class="btn" data-act="filter" data-f="all">Show all checks</button></div>`;
 }
 function passFilter(q) {
-  const j = S.job;
   switch (S.filter) {
     case 'needs': return reviewState(q) === 'needs';
-    case 'unanswered': return !peek(j,q.id)?.answer;
+    case 'unanswered': return !peek(S.job, q.id)?.answer;
     case 'fails': return isFail(q);
     case 'nophoto': return !photosFor(q.id).length;
     default: return true;
   }
 }
-function refreshCard(qid) {
-  const el = document.getElementById('qc_' + qid);
-  if (el) el.outerHTML = cardHTML(QMAP[qid]);
-}
+function refreshCard(qid) { const el = document.getElementById('qc_' + qid); if (el) el.outerHTML = cardHTML(QMAP[qid]); }
 
 function cardHTML(q) {
-  const j = S.job, a = peek(j, q.id) || { answer:'', codes:[], notes:'' };
-  const st = reviewState(q); const fail = isFail(q); const ph = photosFor(q.id); const busy = S.busy[q.id];
-  const stLabel = { needs:'<span class="pill o-needs">Needs review</span>', ai:'<span class="pill o-ai">AI-cleared</span>', human:'<span class="pill o-pass">Verified</span>', open:'' }[st];
-  const ansHTML = q.type === 'select'
-    ? `<select data-on="selAnswer" data-q="${q.id}"><option value="">Select…</option>${q.options.map(o => `<option ${a.answer===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`
-    : q.options.map(o => `<button class="${a.answer===o?'on':''} v-${o.replace('/','')}" data-act="answer" data-q="${q.id}" data-v="${esc(o)}">${esc(o)}</button>`).join('');
-  return `<div class="card q st-${st} ${fail?'is-fail':''}" id="qc_${q.id}">
-    <div class="qtop"><div class="qnum">${q.num}</div><div class="qtext">${esc(q.text)}</div>${stLabel}</div>
-    <div class="ans">${ansHTML}</div>
-    <div class="qbody">
-      <div class="photos">
-        ${ph.map((p,i) => `<div class="thumb" data-act="viewPhoto" data-id="${p.id}" title="${esc(p.description || p.name || '')}"><img src="${imgSrc(p)}" alt="Evidence photo ${i+1}" loading="lazy"><span class="ix">${i+1}</span></div>`).join('')}
-        <div class="add-ph" data-act="camera" data-q="${q.id}" title="Take photo">${I.cam}</div>
-        <div class="add-ph" data-act="pick" data-q="${q.id}" title="Upload photos">${I.up}</div>
-        <button class="btn ai-o sm" data-act="aiCheck" data-q="${q.id}" ${busy?'disabled':''}>${busy ? '<span class="spin"></span> Checking…' : I.ai + (a.ai ? ' Re-check' : ' AI check')}</button>
+  const j = S.job, a = peek(j, q.id) || { answer: '', codes: [], notes: '' };
+  const st = reviewState(q), fail = isFail(q), ph = photosFor(q.id), busy = S.busy[q.id];
+  const badge = { needs: '<span class="badge o-review">Needs review</span>', ai: '<span class="badge o-ai">Cleared by AI</span>', human: '<span class="badge o-pass">Verified</span>', open: '' }[st];
+  const answer = q.type === 'select'
+    ? `<label><span class="sr-only">${esc(q.text)}</span><select class="select" data-on="selAnswer" data-q="${q.id}"><option value="">Select</option>${q.options.map(o => `<option ${a.answer === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`
+    : `<div class="answer-seg" role="group" aria-label="Answer for check ${q.num}">${q.options.map(o => `<button aria-pressed="${a.answer === o}" class="v-${o.replace('/', '')}" data-act="answer" data-q="${q.id}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+  return `<div class="q st-${st} ${fail ? 'is-fail' : ''}" id="qc_${q.id}">
+    <div class="q-head"><span class="q-num">${q.num}</span><div class="q-text">${esc(q.text)}</div><span class="q-status">${badge}</span></div>
+    <div class="q-inner">
+      <div class="q-controls">${answer}</div>
+      <div class="evidence">
+        ${ph.map((p, i) => `<button class="thumb" data-act="viewPhoto" data-id="${p.id}" aria-label="View photo ${i + 1}${p.description ? ': ' + esc(p.description) : ''}"><img src="${imgSrc(p)}" alt="" loading="lazy"><span class="ix">${i + 1}</span></button>`).join('')}
+        <button class="add-tile" data-act="camera" data-q="${q.id}" aria-label="Take a photo for check ${q.num}" title="Take a photo">${I.cam}</button>
+        <button class="add-tile" data-act="pick" data-q="${q.id}" aria-label="Upload photos for check ${q.num}" title="Upload photos">${I.up}</button>
+        <button class="btn btn-sm" data-act="aiCheck" data-q="${q.id}" ${busy ? 'disabled aria-busy="true"' : ''} style="margin-left:4px">${busy ? '<span class="spin"></span>Reviewing' : I.ai + (a.ai ? 'Review again' : 'AI review')}</button>
       </div>
       ${a.ai ? aiPanel(q, a) : ''}
       ${fail ? codesPanel(q, a) : ''}
-      <textarea class="notes" rows="1" placeholder="Auditor notes…" data-on="notes" data-q="${q.id}">${esc(a.notes || '')}</textarea>
-      <div class="qfoot">
-        ${a.by ? `Last set by ${esc(a.by)} · ${fmtDT(a.at)}` : (st==='ai' ? 'Answer set automatically from AI evidence check' : '')}
-        <div class="spacer"></div>
-        ${(st === 'needs' || st === 'ai') && a.answer ? `<button class="btn sm" data-act="verify" data-q="${q.id}">${I.check} Confirm</button>` : ''}
+      <label><span class="sr-only">Notes for check ${q.num}</span><textarea class="note-input" rows="1" placeholder="Add a note" data-on="notes" data-q="${q.id}">${esc(a.notes || '')}</textarea></label>
+      <div class="q-foot">
+        <span>${a.by ? `${esc(a.by)}, ${fmtDT(a.at)}` : (st === 'ai' ? 'Answered automatically from the AI review' : '')}</span>
+        <span class="grow"></span>
+        ${(st === 'needs' || st === 'ai') && a.answer ? `<button class="btn btn-sm" data-act="verify" data-q="${q.id}">${I.check}Confirm answer</button>` : ''}
       </div>
     </div>
   </div>`;
 }
 
 function aiPanel(q, a) {
-  const ai = a.ai; const vlabel = { pass:'Meets requirement', fail:'Defect found', insufficient_evidence:'Insufficient evidence', not_applicable:'Not applicable' }[ai.verdict];
+  const ai = a.ai;
+  const vlabel = { pass: 'Meets requirement', fail: 'Defect found', insufficient_evidence: 'Not enough evidence', not_applicable: 'Not applicable' }[ai.verdict];
   const pc = Math.round((ai.confidence || 0) * 100);
-  const canApply = ai.model !== 'rule' && (ai.recommendedAnswer && a.answer !== ai.recommendedAnswer || ai.issues.some(i => i.code && !(a.codes||[]).includes(i.code)));
-  return `<div class="aip">
-    <div class="h">${I.ai.replace('<svg','<svg width="14" height="14"')} AI review <span class="pill v-${ai.verdict}">${vlabel}</span>
-      ${ai.model !== 'rule' ? `<span class="conf">${pc}% <span class="bar"><i style="width:${pc}%"></i></span></span>` : ''}
-      ${ai.recommendedAnswer ? `<span class="pill o-none">Suggests: ${esc(ai.recommendedAnswer)}</span>` : ''}
-      ${ai.photoQuality?.suspectedPhotoOfScreen ? '<span class="pill o-safety">Possible photo of a screen</span>' : ''}
+  const canApply = ai.model !== 'rule' && ((ai.recommendedAnswer && a.answer !== ai.recommendedAnswer) || ai.issues.some(i => i.code && !(a.codes || []).includes(i.code)));
+  return `<div class="ai-note">
+    <div class="ai-note-head"><span class="who">${I.ai}AI review</span><span class="badge plain v-${ai.verdict}">${vlabel}</span>
+      ${ai.model !== 'rule' ? `<span class="conf" title="Confidence">${pc}% confident<span class="track"><i style="width:${pc}%"></i></span></span>` : ''}
+      ${ai.recommendedAnswer ? `<span class="muted">Suggests <b style="color:var(--ink)">${esc(ai.recommendedAnswer)}</b></span>` : ''}
+      ${ai.photoQuality?.suspectedPhotoOfScreen ? '<span class="badge o-safety">Possible photo of a screen</span>' : ''}
     </div>
-    ${ai.summary ? `<div class="sum">${esc(ai.summary)}</div>` : ''}
-    ${ai.observations?.length ? `<ul>${ai.observations.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : ''}
-    ${ai.issues?.map(i => `<div class="issue sev-${esc(i.severity)}"><div style="flex:1">${i.code ? `<span class="code cat${CODE_MAP[i.code]?.cat}">${esc(i.code)}</span> ` : ''}${esc(i.description)}${i.photo ? ` <span class="pill o-none">photo ${i.photo}</span>` : ''}</div>${i.code && !(a.codes||[]).includes(i.code) ? `<button class="btn sm" data-act="applyCode" data-q="${q.id}" data-code="${esc(i.code)}">Apply</button>` : ''}</div>`).join('') || ''}
-    ${ai.missingEvidence?.length ? `<div class="guidance"><b>Evidence still needed:</b> ${ai.missingEvidence.map(esc).join(' · ')}</div>` : ''}
-    ${!ai.photoQuality?.adequate && ai.photoQuality?.notes ? `<div class="guidance">Photo quality: ${esc(ai.photoQuality.notes)}</div>` : ''}
-    ${ai.engineerAction ? `<div style="margin-top:6px;font-size:13px"><b>Installer action:</b> ${esc(ai.engineerAction)}</div>` : ''}
-    <div class="qfoot"><span>${esc(ai.model)} · ${fmtDT(ai.at)}</span><div class="spacer"></div>${canApply ? `<button class="btn ai sm" data-act="acceptAi" data-q="${q.id}">${I.check} Accept AI finding</button>` : ''}</div>
+    <div class="ai-note-body">
+      ${ai.summary ? `<p>${esc(ai.summary)}</p>` : ''}
+      ${ai.observations?.length ? `<ul>${ai.observations.map(o => `<li>${esc(o)}</li>`).join('')}</ul>` : ''}
+      ${(ai.issues || []).map(i => `<div class="finding sev-${esc(i.severity)}">${i.code ? `<span class="code cat${CODE_MAP[i.code]?.cat}">${esc(i.code)}</span>` : ''}<span class="txt">${esc(i.description)}${i.photo ? ` <span class="muted small">(photo ${i.photo})</span>` : ''}</span>${i.code && !(a.codes || []).includes(i.code) ? `<button class="btn btn-sm" data-act="applyCode" data-q="${q.id}" data-code="${esc(i.code)}">Add code</button>` : ''}</div>`).join('')}
+      ${ai.missingEvidence?.length ? `<div class="callout"><b>Still needed:</b> ${ai.missingEvidence.map(esc).join('; ')}</div>` : ''}
+      ${!ai.photoQuality?.adequate && ai.photoQuality?.notes ? `<div class="callout"><b>Photo quality:</b> ${esc(ai.photoQuality.notes)}</div>` : ''}
+      ${ai.engineerAction ? `<p style="margin-top:10px"><b>Installer action:</b> ${esc(ai.engineerAction)}</p>` : ''}
+    </div>
+    <div class="ai-note-foot"><span>${ai.model === 'rule' ? 'Automatic check' : esc(ai.model)}</span><span>${fmtDT(ai.at)}</span><span class="grow"></span>${canApply ? `<button class="btn btn-primary btn-sm" data-act="acceptAi" data-q="${q.id}">${I.check}Accept AI finding</button>` : ''}</div>
   </div>`;
 }
 
@@ -1276,15 +1541,19 @@ function codesPanel(q, a) {
   const opts = [...(q.codes || [])];
   (a.codes || []).forEach(c => { if (!opts.find(o => o.val === c) && CODE_MAP[c]) opts.push(CODE_MAP[c]); });
   const others = MASTER_CODES.filter(c => !opts.find(o => o.val === c.val));
-  return `<div class="codes">
-    ${opts.length ? `<h4>CAT codes</h4>${opts.map(c => `<label class="code-opt"><input type="checkbox" data-on="code" data-q="${q.id}" value="${esc(c.val)}" ${(a.codes||[]).includes(c.val)?'checked':''}>
-      <span><b class="cat${c.cat}">${esc(c.val)}</b> ${esc(c.text.replace(/^CAT \d [A-Z0-9]+ - /,''))} ${aiCodes.has(c.val) ? '<span class="pill o-ai">AI</span>' : ''}<span class="act">${esc(c.action)}</span></span></label>`).join('')}
-    <label class="code-opt"><select data-on="addCode" data-q="${q.id}" class="btn sm" style="font-weight:500"><option value="">+ Add another CAT code…</option>${others.map(c => `<option value="${esc(c.val)}">${esc(c.text)}</option>`).join('')}</select></label>` : ''}
-    ${q.ifNoAction ? `<div class="guidance"><b>Action:</b> ${esc(q.ifNoAction)}</div>` : ''}
-  </div>`;
+  const sel = a.codes || [];
+  if (!opts.length && !q.ifNoAction) return '';
+  return `<details class="codes" ${sel.length ? '' : 'open'}>
+    <summary>${I.chevR}CAT codes <span class="muted" style="font-weight:400">${sel.length ? sel.length + ' selected' : 'none selected'}</span><span class="sel">${sel.map(c => `<span class="code-tag cat${CODE_MAP[c]?.cat}">${esc(c)}</span>`).join('')}</span></summary>
+    <div class="code-list">
+      ${opts.map(c => `<label class="code-opt"><input type="checkbox" data-on="code" data-q="${q.id}" value="${esc(c.val)}" ${sel.includes(c.val) ? 'checked' : ''}>
+        <span><b class="cat${c.cat}">${esc(c.val)}</b>${esc(c.text.replace(/^CAT \d [A-Z0-9]+ - /, ''))}${aiCodes.has(c.val) ? '<span class="ai-tag">Suggested by AI</span>' : ''}<span class="act">${esc(c.action)}</span></span></label>`).join('')}
+      <div style="padding-top:10px"><label><span class="sr-only">Add another CAT code</span><select class="select" style="width:100%" data-on="addCode" data-q="${q.id}"><option value="">Add another CAT code</option>${others.map(c => `<option value="${esc(c.val)}">${esc(c.text)}</option>`).join('')}</select></label></div>
+      ${q.ifNoAction ? `<div class="callout"><b>Required action:</b> ${esc(q.ifNoAction)}</div>` : ''}
+    </div>
+  </details>`;
 }
 
-/* Answer changes by a human */
 function setAnswer(qid, val) {
   const q = QMAP[qid], a = ans(qid);
   a.answer = a.answer === val ? '' : val;
@@ -1292,80 +1561,85 @@ function setAnswer(qid, val) {
   else if (!a.codes.length && a.ai?.issues?.length) a.codes = [...new Set(a.ai.issues.map(i => i.code).filter(Boolean))];
   a.review = a.answer ? 'human' : ''; a.by = auditorName(); a.at = Date.now();
   markDirty(qid);
-  if (qid === 'q4') { renderQuestions(); } else refreshCard(qid);
+  if (qid === 'q4') renderQuestions(); else refreshCard(qid);
   updateJobHeader();
+  document.querySelector(`#qc_${qid} [data-act=answer][data-v="${CSS.escape(val)}"]`)?.focus();
 }
 
 /* ═════════════ PHOTO CAPTURE ═════════════ */
 async function handleFiles(files, qid) {
   files = [...files].filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|heic|webp)$/i.test(f.name));
-  if (!files.length || !S.job) return;
+  if (!files.length || !S.job) { toast('Choose JPG or PNG photos.', 'err'); return; }
   const jobId = S.job.id; let ok = 0;
-  toast(`Uploading ${files.length} photo${files.length>1?'s':''}…`);
+  toast(`Uploading ${files.length} photo${files.length > 1 ? 's' : ''}`);
   for (const f of files) {
     try { await addPhotoToJob(jobId, f, qid ? [qid] : []); ok++; refreshCard(qid); }
-    catch (e) { console.error(e); toast('Photo failed: ' + (e.code || e.message), 'err'); }
+    catch (e) { console.error(e); toast(`${f.name} could not be uploaded: ${e.code || e.message}`, 'err'); }
   }
-  if (ok) toast(`${ok} photo${ok>1?'s':''} saved`, 'ok');
+  if (ok) toast(`${ok} photo${ok > 1 ? 's' : ''} uploaded`, 'ok');
   updateJobHeader();
-  if (qid && ok && lsGet('as_autocheck') !== 'off') aiCheckQuestion(qid).catch(()=>{});
+  if (qid && ok && lsGet('as_autocheck') !== 'off') aiCheckQuestion(qid).catch(() => {});
 }
 
 let camStream = null;
-async function openCamera(onShots) {
+async function openCamera() {
   if (!navigator.mediaDevices?.getUserMedia) { $('#pickCamera').click(); return; }
-  const shots = [];
-  openModal({ title:'Camera', body:`<video class="cam" id="camVideo" autoplay playsinline muted></video>
-      <div class="photos" id="camShots"></div>`,
-    foot:`<button class="btn" data-act="camSwitch">Switch camera</button><div class="spacer"></div><button class="btn pri" data-act="camShoot">${I.cam} Capture</button><button class="btn dark" data-act="camDone">Use photos</button>`,
-    onClose: () => { stopCam(); } });
-  S.cam = { shots, onShots, facing:'environment' };
+  openModal({ title: 'Take photos', size: 'wide', body: `<video class="cam" id="camVideo" autoplay playsinline muted aria-label="Camera preview"></video><div class="evidence" id="camShots" aria-live="polite"></div>`,
+    foot: `<button class="btn" data-act="camSwitch">${I.switchCam}Switch camera</button><span class="grow"></span><button class="btn btn-accent" data-act="camShoot">${I.cam}Capture</button><button class="btn btn-primary" data-act="camDone" id="camDone" disabled>Use photos</button>`,
+    onClose: stopCam });
+  S.cam = { shots: [], facing: 'environment' };
   await startCam();
 }
 async function startCam() {
   stopCam();
-  try {
-    camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode: S.cam.facing, width:{ ideal:1920 }, height:{ ideal:1440 } }, audio:false });
-    $('#camVideo').srcObject = camStream;
-  } catch (e) { closeModal(); toast('Camera unavailable – opening file picker instead.'); $('#pickCamera').click(); }
+  try { camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: S.cam.facing, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false }); $('#camVideo').srcObject = camStream; }
+  catch (e) { closeModal(); toast('The camera is not available here, so the photo picker has opened instead.'); $('#pickCamera').click(); }
 }
 function stopCam() { if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; } }
 async function camShoot() {
   const v = $('#camVideo'); if (!v || !v.videoWidth) return;
   const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
   const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
-  const file = new File([blob], `camera_${Date.now()}.jpg`, { type:'image/jpeg' });
-  S.cam.shots.push(file);
-  $('#camShots').insertAdjacentHTML('beforeend', `<div class="thumb"><img src="${c.toDataURL('image/jpeg',0.5)}"><span class="ix">${S.cam.shots.length}</span></div>`);
+  S.cam.shots.push(new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+  $('#camShots').insertAdjacentHTML('beforeend', `<span class="thumb" style="cursor:default"><img src="${c.toDataURL('image/jpeg', 0.5)}" alt="Captured photo ${S.cam.shots.length}"><span class="ix">${S.cam.shots.length}</span></span>`);
+  const d = $('#camDone'); d.disabled = false; d.textContent = `Use ${S.cam.shots.length} photo${S.cam.shots.length > 1 ? 's' : ''}`;
 }
 
 /* ═════════════ PHOTO VIEWER ═════════════ */
 function viewPhoto(pid) {
   const p = S.photos.find(x => x.id === pid); if (!p) return;
-  const tags = (p.qIds || []).map(id => QMAP[id] ? `<span class="tag">#${QMAP[id].num} ${esc(QMAP[id].text.slice(0,40))}<button data-act="untag" data-id="${p.id}" data-q="${id}" title="Remove">×</button></span>` : '').join('');
-  openModal({ title:'Evidence photo', wide:true, body:`
-    <img class="lb-img" src="${p.url || imgSrc(p)}" alt="">
-    ${p.description ? `<p style="margin:10px 0 4px"><b>AI description:</b> ${esc(p.description)}</p>` : ''}
-    ${p.concerns ? `<div class="guidance">${esc(p.concerns)}</div>` : ''}
-    <p class="sub" style="margin:8px 0">${esc(p.name || '')} · uploaded ${fmtDT(p.uploadedAt)} by ${esc(p.uploadedBy || '—')}</p>
-    <div><b style="font-size:13px">Evidence for:</b> ${tags || '<span class="sub">Not assigned to a check</span>'}</div>
-    <div class="row" style="margin-top:8px"><select class="btn sm" data-on="tagPhoto" data-id="${p.id}" style="font-weight:500;max-width:100%"><option value="">+ Assign to check…</option>
-      ${SECTIONS.map(s => `<optgroup label="${esc(s.title)}">${s.items.filter(q => !isHidden(q)).map(q => `<option value="${q.id}">#${q.num} ${esc(q.text)}</option>`).join('')}</optgroup>`).join('')}</select></div>`,
-    foot:`<button class="btn danger" data-act="delPhoto" data-id="${p.id}">Delete photo</button><div class="spacer"></div>${p.url ? `<a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener">Open full size</a>` : ''}<button class="btn dark" data-act="closeModal">Close</button>` });
+  const tags = (p.qIds || []).map(id => QMAP[id] ? `<span class="tag">${QMAP[id].num}. ${esc(QMAP[id].text.length > 46 ? QMAP[id].text.slice(0, 44) + '...' : QMAP[id].text)}<button data-act="untag" data-id="${p.id}" data-q="${id}" aria-label="Remove from check ${QMAP[id].num}">${I.x}</button></span>` : '').join('');
+  openModal({ title: 'Photo', size: 'wide', body: `
+    <img class="lightbox" src="${p.url || imgSrc(p)}" alt="${esc(p.description || 'Site photo')}">
+    <div class="form-grid" style="margin-top:16px">
+      <div class="stack">
+        ${p.description ? `<div><div class="small muted">What AI sees</div><p>${esc(p.description)}</p></div>` : ''}
+        ${p.concerns ? `<div class="callout">${esc(p.concerns)}</div>` : ''}
+        <div class="small muted">${esc(p.name || '')}<br>Uploaded ${fmtDT(p.uploadedAt)} by ${esc(p.uploadedBy || 'unknown')}</div>
+      </div>
+      <div>
+        <div class="small muted" style="margin-bottom:6px">Evidence for</div>
+        ${tags || '<p class="small">Not assigned to a check yet.</p>'}
+        <label style="display:block;margin-top:8px"><span class="sr-only">Assign to a check</span><select class="select" style="width:100%" data-on="tagPhoto" data-id="${p.id}"><option value="">Assign to a check</option>
+          ${SECTIONS.map(s => `<optgroup label="${esc(s.title)}">${s.items.filter(q => !isHidden(q) && !(p.qIds || []).includes(q.id)).map(q => `<option value="${q.id}">${q.num}. ${esc(q.text)}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      </div>
+    </div>`,
+    foot: `<button class="btn btn-danger" data-act="delPhoto" data-id="${p.id}">${I.trash}Delete photo</button><span class="grow"></span>${p.url ? `<a class="btn" href="${esc(p.url)}" target="_blank" rel="noopener">Open full size</a>` : ''}<button class="btn btn-primary" data-act="closeModal">Done</button>` });
 }
-
 function viewUnsorted() {
   const list = S.photos.filter(p => !(p.qIds || []).length);
-  openModal({ title:`Unsorted photos (${list.length})`, wide:true, body: list.length ? `<p class="sub">Click a photo to assign it to a check.</p><div class="photos">${list.map(p => `<div class="thumb" style="width:110px;height:110px" data-act="viewPhoto" data-id="${p.id}"><img src="${imgSrc(p)}"></div>`).join('')}</div>` : '<div class="empty">All photos are assigned.</div>' });
+  openModal({ title: 'Photos not assigned to a check', size: 'wide', body: list.length
+    ? `<p class="muted" style="margin-bottom:14px">AI couldn't match these to a check. Open a photo to assign it.</p><div class="evidence">${list.map((p, i) => `<button class="thumb" style="width:112px;height:112px" data-act="viewPhoto" data-id="${p.id}" aria-label="Photo ${i + 1}"><img src="${imgSrc(p)}" alt=""></button>`).join('')}</div>`
+    : `<div class="empty-state"><div class="empty-icon">${I.check}</div><h3>Every photo is assigned</h3></div>` });
 }
 
-/* ═════════════ BULK: AI SORT PHOTOS ═════════════ */
+/* ═════════════ BULK: AI SORTS PHOTOS ═════════════ */
 function bulkUploadModal() {
-  openModal({ title:'Drop site photos – AI sorts them', body:`
-    <p class="sub">Add every photo from the job at once (pre-install, install, testing, paperwork screenshots). The AI matches each photo to the right audit check, then you can run the evidence check across the whole job.</p>
-    <div class="drop" id="bulkDrop" data-act="bulkPick">${I.up.replace('<svg','<svg width="34" height="34"')}<div style="font-weight:700;margin-top:6px;color:var(--ink)">Drop photos here or click to choose</div><div>JPG / PNG · any number</div></div>
-    <label class="row" style="margin-top:12px;font-size:14px"><input type="checkbox" id="bulkThenCheck" checked> Run the AI evidence check on all affected checks afterwards</label>`,
-    foot:`<button class="btn" data-act="closeModal">Cancel</button>` });
+  openModal({ title: 'Upload site photos', body: `
+    <p class="muted" style="margin-bottom:16px">Add every photo from the job: pre-install, the finished install, test results and screenshots of paperwork. AI files each one under the right check.</p>
+    <button class="dropzone" id="bulkDrop" data-act="bulkPick">${I.up}<b>Drop photos here, or choose files</b><span class="small">JPG or PNG, as many as you like</span></button>
+    <label class="check" style="margin-top:16px"><input type="checkbox" id="bulkThenCheck" checked><span>Run the AI review on the affected checks when sorting finishes</span></label>`,
+    foot: `<button class="btn" data-act="closeModal">Cancel</button>` });
   const d = $('#bulkDrop');
   d.addEventListener('dragover', e => { e.preventDefault(); d.classList.add('over'); });
   d.addEventListener('dragleave', () => d.classList.remove('over'));
@@ -1373,10 +1647,10 @@ function bulkUploadModal() {
 }
 async function runBulk(files) {
   files = files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(f.name));
-  if (!files.length) return;
-  const thenCheck = $('#bulkThenCheck')?.checked;
-  const job = S.job; const touched = new Set(); let done = 0;
-  openProgress(`Sorting ${files.length} photos`);
+  if (!files.length) { toast('Choose JPG or PNG photos.', 'err'); return; }
+  const thenCheck = $('#bulkThenCheck') ? $('#bulkThenCheck').checked : true;
+  const job = S.job, touched = new Set(); let done = 0;
+  openProgress(`Sorting ${files.length} photo${files.length > 1 ? 's' : ''}`);
   const prompt = classifyPrompt(job);
   await pool(files, 3, async (f) => {
     try {
@@ -1385,83 +1659,81 @@ async function runBulk(files) {
         const r = parseJSON(await callAI(prompt, [p.img]));
         const matches = (r.matches || []).filter(m => QMAP[m.qId] && (Number(m.confidence) || 0) >= 0.45).slice(0, 3);
         p.qIds = matches.map(m => m.qId); p.description = String(r.description || ''); p.concerns = String(r.concerns || '');
-        await updateDoc(doc(db, COL.photos, p.id), { qIds:p.qIds, description:p.description, concerns:p.concerns, classifiedAt:Date.now() });
+        await updateDoc(doc(db, COL.photos, p.id), { qIds: p.qIds, description: p.description, concerns: p.concerns, classifiedAt: Date.now() });
         p.qIds.forEach(id => touched.add(id));
-        plog(`✓ ${f.name} → ${p.qIds.length ? p.qIds.map(id => '#' + QMAP[id].num).join(', ') : 'unsorted'}  ${p.description.slice(0,70)}`);
-      } catch (e) { plog(`! ${f.name}: saved but not sorted (${aiErrorText(e).slice(0,90)})`); }
-    } catch (e) { plog(`✗ ${f.name}: upload failed (${e.code || e.message})`); }
+        plog(p.qIds.length ? 'Sorted' : 'Unmatched', `${f.name}: ${p.qIds.length ? 'check ' + p.qIds.map(id => QMAP[id].num).join(', ') : 'assign it yourself'}${p.description ? '. ' + p.description.slice(0, 80) : ''}`, p.qIds.length ? 'ok' : 'warn');
+      } catch (e) { plog('Not sorted', `${f.name} uploaded, but AI could not sort it. ${aiErrorText(e).slice(0, 100)}`, 'warn'); }
+    } catch (e) { plog('Failed', `${f.name} could not be uploaded (${e.code || e.message})`, 'err'); }
     prog(++done, files.length, `Sorted ${done} of ${files.length}`);
   });
   renderJob();
-  if (thenCheck && touched.size && !S.cancel) { await runChecks([...touched], 'Checking evidence'); }
-  else progFinish(`Done – ${touched.size} checks received photos.`);
+  if (thenCheck && touched.size && !S.cancel) await runChecks([...touched], 'AI review');
+  else progFinish(`Finished. ${touched.size} check${touched.size === 1 ? '' : 's'} received photos.`);
 }
 
 async function runChecks(qids, title) {
-  if (!$('#progBar')) openProgress(title); else { S.cancel = false; $('#progCancel')?.classList.remove('hidden'); $('#progDone')?.classList.add('hidden'); }
+  if (!$('#progBar')) openProgress(title); else { S.cancel = false; $('#progCancel')?.classList.remove('hidden'); $('#progDone')?.classList.add('hidden'); prog(0, qids.length, 'Reviewing'); }
   let done = 0, failed = 0;
-  plog(`— ${title}: ${qids.length} checks —`);
+  plog('Started', `${title} of ${qids.length} check${qids.length > 1 ? 's' : ''}`, 'info');
   await pool(qids, 2, async (qid) => {
     const q = QMAP[qid];
     try {
-      const r = await aiCheckQuestion(qid, { quiet:true });
+      const r = await aiCheckQuestion(qid, { quiet: true });
       const a = peek(S.job, qid);
-      plog(`#${q.num} ${r.verdict.toUpperCase()} ${r.model==='rule'?'':'('+Math.round(r.confidence*100)+'%)'} → ${a.review === 'ai' ? 'auto-cleared' : 'auditor review'}`);
-    } catch (e) { failed++; plog(`#${q.num} error: ${aiErrorText(e).slice(0,110)}`); }
-    prog(++done, qids.length, `${done} / ${qids.length} checked`);
+      const word = { pass: 'Pass', fail: 'Defect', insufficient_evidence: 'No evidence', not_applicable: 'N/A' }[r.verdict];
+      plog(word, `Check ${q.num}: ${a.review === 'ai' ? 'cleared automatically' : 'sent for review'}${r.model === 'rule' ? ' (no photos)' : ', ' + Math.round(r.confidence * 100) + '% confident'}`, r.verdict === 'pass' ? 'ok' : r.verdict === 'fail' ? 'err' : 'warn');
+    } catch (e) { failed++; plog('Error', `Check ${q.num}: ${aiErrorText(e).slice(0, 110)}`, 'err'); }
+    prog(++done, qids.length, `Reviewed ${done} of ${qids.length}`);
   });
   renderJob();
   const sum = summarise(S.job);
-  progFinish(`${S.cancel ? 'Stopped. ' : ''}${sum.aiAccepted} cleared by AI · ${sum.needsReview} need an auditor${failed ? ` · ${failed} errors` : ''}`);
+  progFinish(`${S.cancel ? 'Stopped. ' : ''}${sum.aiAccepted} cleared by AI, ${sum.needsReview} need${sum.needsReview === 1 ? 's' : ''} review${failed ? `, ${failed} error${failed > 1 ? 's' : ''}` : ''}`);
 }
 
 /* ═════════════ REPORT ═════════════ */
 function reportHTML() {
   const j = S.job, sum = summarise(j), o = computeOutcome(j);
-  const actions = [];
-  let rows = '';
+  const actions = []; let rows = '';
   SECTIONS.forEach(sec => {
     const items = sec.items.filter(q => !isHidden(q)); if (!items.length) return;
-    rows += `<tr><td colspan="5" style="background:#f3f4f0;font-weight:700">${esc(sec.title)}</td></tr>`;
+    rows += `<tr class="sec-row"><td colspan="5">${esc(sec.title)}</td></tr>`;
     items.forEach(q => {
       const a = peek(j, q.id) || {}; const st = reviewState(q);
-      (a.codes || []).forEach(c => actions.push({ q, c: CODE_MAP[c] || { val:c, text:c, action:'' } }));
-      if (isFail(q) && q.ifNoAction && !(a.codes||[]).length) actions.push({ q, c:{ val:'Action', text:q.text, action:q.ifNoAction, cat:'' } });
-      rows += `<tr><td>${q.num}</td><td>${esc(q.text)}${a.notes ? `<div class="sub" style="margin:2px 0 0">${esc(a.notes)}</div>` : ''}</td>
-        <td class="ans-${esc(a.answer)}">${esc(a.answer || '—')}</td>
-        <td>${(a.codes||[]).map(c => `<div class="cat${CODE_MAP[c]?.cat}" style="font-family:var(--mono);font-size:12px">${esc(c)}</div>`).join('')}</td>
-        <td style="font-size:12px">${{ai:'AI', human:'Auditor', needs:'Pending', open:'—'}[st]}</td></tr>`;
+      (a.codes || []).forEach(c => actions.push({ q, c: CODE_MAP[c] || { val: c, text: c, action: '' } }));
+      if (isFail(q) && q.ifNoAction && !(a.codes || []).length) actions.push({ q, c: { val: 'Action', text: q.text, action: q.ifNoAction, cat: '' } });
+      rows += `<tr><td>${q.num}</td><td>${esc(q.text)}${a.notes ? `<div class="muted small" style="margin-top:2px">${esc(a.notes)}</div>` : ''}</td>
+        <td class="ans-${esc(a.answer)}">${esc(a.answer || '-')}</td>
+        <td>${(a.codes || []).map(c => `<div class="mono cat${CODE_MAP[c]?.cat}" style="font-size:12px">${esc(c)}</div>`).join('')}</td>
+        <td class="small">${{ ai: 'AI', human: 'Auditor', needs: 'Pending', open: '-' }[st]}</td></tr>`;
     });
   });
   const failPhotos = visibleQs(j).filter(q => isFail(q) && photosFor(q.id).length);
   const w = j.aiWriteup;
   return `<div class="report">
-    <div class="r-head"><div><div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">${esc(S.settings.companyName)} · Installation audit report</div>
-      <div style="font-size:22px;font-weight:800;font-family:var(--mono)">Job #${esc(j.jobNumber)}</div>
-      <div>${esc([j.customer, j.address, j.postcode].filter(Boolean).join(', '))}</div></div>
-      <div style="text-align:right"><div class="outcome-box o-${o.key}" style="display:inline-flex">${esc(o.label)}</div><div class="sub" style="margin:6px 0 0">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}<br>Auditor: ${esc(j.completedBy || auditorName())}</div></div></div>
-    <div class="kv" style="margin-bottom:12px">
-      <div><b>System</b>${esc(j.systemType||'—')}</div><div><b>Installer</b>${esc(j.installer||'—')}</div><div><b>Install date</b>${fmtDate(j.installDate)}</div>
-      <div><b>Checks answered</b>${sum.answeredQ}/${sum.totalQ}</div><div><b>AI-cleared</b>${sum.aiAccepted}</div><div><b>Auditor-verified</b>${sum.humanVerified}</div>
+    <div class="r-head"><div><div class="muted small">${esc(S.settings.companyName)} installation audit</div><div class="mono">${esc(j.jobNumber)}</div><div>${esc([j.customer, j.address, j.postcode].filter(Boolean).join(', '))}</div></div>
+      <div style="text-align:right"><div class="outcome-value k-${sum.answeredQ ? o.key : 'none'}">${esc(sum.answeredQ ? o.label : 'Not started')}</div><div class="muted small" style="margin-top:4px">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}<br>Auditor: ${esc(j.completedBy || auditorName())}</div></div></div>
+    <div class="r-grid">
+      <div><span>System</span>${esc(j.systemType || '-')}</div><div><span>Installer</span>${esc(j.installer || '-')}</div><div><span>Install date</span>${fmtDate(j.installDate)}</div>
+      <div><span>Checks answered</span>${sum.answeredQ} of ${sum.totalQ}</div><div><span>Cleared by AI</span>${sum.aiAccepted}</div><div><span>Verified by an auditor</span>${sum.humanVerified}</div>
     </div>
-    ${w ? `<h3>Summary</h3><p>${esc(w.summary)}</p>${w.keyFindings?.length ? `<ul>${w.keyFindings.map(k=>`<li>${esc(k)}</li>`).join('')}</ul>` : ''}${w.engineerFeedback ? `<p><b>Feedback for the installer:</b> ${esc(w.engineerFeedback)}</p>` : ''}` : ''}
+    ${w ? `<h3>Summary</h3><p>${esc(w.summary)}</p>${w.keyFindings?.length ? `<ul class="list-plain">${w.keyFindings.map(k => `<li>${esc(k)}</li>`).join('')}</ul>` : ''}${w.engineerFeedback ? `<p style="margin-top:8px"><b>Feedback for the installer:</b> ${esc(w.engineerFeedback)}</p>` : ''}` : ''}
     <h3>Actions required (${actions.length})</h3>
-    ${actions.length ? `<table><tr><th>#</th><th>Check</th><th>Code</th><th>Required action</th></tr>${actions.map(x => `<tr><td>${x.q.num}</td><td>${esc(x.q.text)}</td><td class="cat${x.c.cat}" style="font-family:var(--mono);font-size:12px;white-space:nowrap">${esc(x.c.val)}</td><td>${esc(x.c.action)}</td></tr>`).join('')}</table>` : '<p>No actions – all checks passed.</p>'}
-    ${failPhotos.length ? `<h3>Evidence for failed checks</h3>${failPhotos.map(q => `<div style="margin-bottom:10px"><b>#${q.num} ${esc(q.text)}</b><div class="ph-grid">${photosFor(q.id).slice(0,6).map(p => `<img src="${imgSrc(p)}">`).join('')}</div></div>`).join('')}` : ''}
+    ${actions.length ? `<table><thead><tr><th>Check</th><th>Description</th><th>Code</th><th>Required action</th></tr></thead><tbody>${actions.map(x => `<tr><td>${x.q.num}</td><td>${esc(x.q.text)}</td><td class="mono cat${x.c.cat}" style="font-size:12px;white-space:nowrap">${esc(x.c.val)}</td><td>${esc(x.c.action)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">No actions. Every answered check passed.</p>'}
+    ${failPhotos.length ? `<h3>Evidence for failed checks</h3>${failPhotos.map(q => `<div style="margin-bottom:12px"><b>${q.num}. ${esc(q.text)}</b><div class="ph-grid">${photosFor(q.id).slice(0, 6).map(p => `<img src="${imgSrc(p)}" alt="">`).join('')}</div></div>`).join('')}` : ''}
     <h3>Full checklist</h3>
-    <table><tr><th>#</th><th>Check</th><th>Answer</th><th>Codes</th><th>By</th></tr>${rows}</table>
+    <table><thead><tr><th>#</th><th>Check</th><th>Answer</th><th>Codes</th><th>By</th></tr></thead><tbody>${rows}</tbody></table>
   </div>`;
 }
 function openReport() {
-  openModal({ title:'Audit report', wide:true, body:`<div id="reportBody">${reportHTML()}</div>`,
-    foot:`<button class="btn ai-o" data-act="aiWriteup">${I.ai} ${S.job.aiWriteup ? 'Rewrite' : 'Write'} AI summary</button><div class="spacer"></div><button class="btn" data-act="emailReport">${I.mail} Email</button><button class="btn dark" data-act="printReport">Print / save PDF</button>` });
+  openModal({ title: 'Audit report', size: 'wide', body: `<div id="reportBody">${reportHTML()}</div>`,
+    foot: `<button class="btn" data-act="aiWriteup">${I.ai}${S.job.aiWriteup ? 'Rewrite summary' : 'Write summary with AI'}</button><span class="grow"></span><button class="btn" data-act="emailReport">${I.mail}Email</button><button class="btn btn-primary" data-act="printReport">${I.doc}Print or save PDF</button>` });
 }
 async function aiWriteup(btn) {
   const j = S.job;
-  const lines = visibleQs(j).map(q => { const a = peek(j,q.id) || {}; if (!a.answer && !a.ai) return null;
-    return `#${q.num} ${q.text}: ${a.answer || 'unanswered'}${a.codes?.length ? ' [' + a.codes.join(', ') + ']' : ''}${a.ai?.summary ? ' — AI: ' + a.ai.summary : ''}${a.notes ? ' — notes: ' + a.notes : ''}`; }).filter(Boolean);
-  if (!lines.length) { toast('Answer some checks first.'); return; }
-  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Writing…';
+  const lines = visibleQs(j).map(q => { const a = peek(j, q.id) || {}; if (!a.answer && !a.ai) return null;
+    return `#${q.num} ${q.text}: ${a.answer || 'unanswered'}${a.codes?.length ? ' [' + a.codes.join(', ') + ']' : ''}${a.ai?.summary ? ' | AI: ' + a.ai.summary : ''}${a.notes ? ' | notes: ' + a.notes : ''}`; }).filter(Boolean);
+  if (!lines.length) { toast('Answer at least one check before writing a summary.'); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Writing summary';
   try {
     const r = parseJSON(await callAI(`Write the summary section of a solar installation audit report for job #${j.jobNumber}.
 JOB CONTEXT
@@ -1471,127 +1743,159 @@ CHECK RESULTS
 ${lines.join('\n')}
 
 Return JSON: {"summary": "3-5 sentences, factual, for the operations manager", "keyFindings": ["most important issues first, max 6"], "engineerFeedback": "constructive feedback to the installer in 2-3 sentences"}`));
-    j.aiWriteup = { summary:String(r.summary||''), keyFindings:(r.keyFindings||[]).map(String), engineerFeedback:String(r.engineerFeedback||''), at:Date.now() };
-    markDirty(); $('#reportBody').innerHTML = reportHTML(); btn.innerHTML = I.ai + ' Rewrite AI summary';
-  } catch (e) { toast(aiErrorText(e), 'err', 7000); btn.innerHTML = I.ai + ' Write AI summary'; }
-  btn.disabled = false;
+    j.aiWriteup = { summary: String(r.summary || ''), keyFindings: (r.keyFindings || []).map(String), engineerFeedback: String(r.engineerFeedback || ''), at: Date.now() };
+    markDirty(); $('#reportBody').innerHTML = reportHTML(); toast('Summary written', 'ok');
+  } catch (e) { toast(aiErrorText(e), 'err', 8000); }
+  btn.disabled = false; btn.innerHTML = I.ai + (j.aiWriteup ? 'Rewrite summary' : 'Write summary with AI');
 }
 function printReport() {
   $('#printArea').innerHTML = reportHTML(); document.body.classList.add('print-report');
   setTimeout(() => { window.print(); document.body.classList.remove('print-report'); }, 100);
 }
 function emailReport() {
-  const j = S.job, o = computeOutcome(j);
-  const items = [];
-  visibleQs(j).forEach(q => { const a = peek(j,q.id); if (!a) return;
-    (a.codes||[]).forEach(c => items.push(`• #${q.num} ${q.text}\n   ${c}: ${CODE_MAP[c]?.action || ''}`));
-    if (isFail(q) && !(a.codes||[]).length && q.ifNoAction) items.push(`• #${q.num} ${q.text}\n   ${q.ifNoAction}`);
+  const j = S.job, o = computeOutcome(j), items = [];
+  visibleQs(j).forEach(q => { const a = peek(j, q.id); if (!a) return;
+    (a.codes || []).forEach(c => items.push(`- Check ${q.num}, ${q.text}\n  ${c}: ${CODE_MAP[c]?.action || ''}`));
+    if (isFail(q) && !(a.codes || []).length && q.ifNoAction) items.push(`- Check ${q.num}, ${q.text}\n  ${q.ifNoAction}`);
   });
-  const body = `Job #${j.jobNumber} – ${j.customer || ''} ${j.postcode || ''}\nOutcome: ${o.label}\n\n${j.aiWriteup?.summary ? j.aiWriteup.summary + '\n\n' : ''}${items.length ? 'Actions required:\n' + items.join('\n') : 'No actions required.'}\n\nAudited by ${auditorName()} using ${S.settings.companyName}.`;
-  const url = `mailto:${encodeURIComponent(S.settings.reportEmail || '')}?subject=${encodeURIComponent(`Audit result – Job #${j.jobNumber} – ${o.label}`)}&body=${encodeURIComponent(body.slice(0, 1800))}`;
-  window.location.href = url;
+  const body = `Job ${j.jobNumber}, ${[j.customer, j.postcode].filter(Boolean).join(', ')}\nOutcome: ${o.label}\n\n${j.aiWriteup?.summary ? j.aiWriteup.summary + '\n\n' : ''}${items.length ? 'Actions required:\n' + items.join('\n') : 'No actions required.'}\n\nAudited by ${auditorName()}.`;
+  window.location.href = `mailto:${encodeURIComponent(S.settings.reportEmail || '')}?subject=${encodeURIComponent(`Audit result: job ${j.jobNumber}, ${o.label}`)}&body=${encodeURIComponent(body.slice(0, 1800))}`;
 }
 
-/* ═════════════ VIEW: AI INSPECTOR ═════════════ */
-function renderInspector(soft) {
-  if (soft && S.view !== 'inspector') return;
+/* ═════════════ VIEW: PHOTO CHECK ═════════════ */
+function renderInspector() {
   const ins = S.ins;
-  const jobOpts = S.jobs.map(j => `<option value="${j.id}" ${ins.jobId===j.id?'selected':''}>#${esc(j.jobNumber)} ${esc(j.customer||'')}</option>`).join('');
+  const jobOpts = S.jobs.map(j => `<option value="${j.id}" ${ins.jobId === j.id ? 'selected' : ''}>${esc(j.jobNumber)}${j.customer ? ', ' + esc(j.customer) : ''}</option>`).join('');
   $('#view-inspector').innerHTML = `
-    <h1>AI Inspector</h1><p class="sub">Snap or upload any part of an installation and get an instant critique against the audit standards and CAT codes.</p>
-    <div class="ins-grid">
-      <div class="card pad">
-        <h3>Photos</h3>
-        <div class="photos">${ins.photos.map((p,i) => `<div class="thumb" style="width:90px;height:90px"><img src="${imgSrc(p)}"><span class="ix">${i+1}</span></div>`).join('')}
-          <div class="add-ph" style="width:90px;height:90px" data-act="insCam">${I.cam}</div><div class="add-ph" style="width:90px;height:90px" data-act="insPick">${I.up}</div></div>
-        <label class="f" style="margin-top:12px">What should the AI focus on? (optional)<textarea rows="2" data-on="insContext" placeholder="e.g. Is this PVDB terminated correctly? Are the roof hooks fixed properly?">${esc(ins.context)}</textarea></label>
-        <label class="f" style="margin-top:10px">Link to job (optional – adds job context)<select data-on="insJob"><option value="">None</option>${jobOpts}</select></label>
-        <div class="row" style="margin-top:12px"><button class="btn ai" data-act="insRun" ${ins.photos.length && !ins.busy ? '' : 'disabled'}>${ins.busy ? '<span class="spin"></span> Critiquing…' : I.ai + ' Critique installation'}</button><button class="btn" data-act="insClear">Clear</button></div>
+    <div class="page-head"><div><h1>Photo check</h1><p>Get an instant second opinion on any part of an installation, checked against BS 7671, MCS and your CAT codes. Nothing is added to an audit.</p></div></div>
+    <div class="ins-layout">
+      <div class="panel">
+        <div class="panel-head"><h3>Photos</h3><span class="grow"></span><span class="small muted">${ins.photos.length ? ins.photos.length + ' added' : 'Up to 8'}</span></div>
+        <div class="panel-body stack">
+          <div class="ins-photos">${ins.photos.map((p, i) => `<span class="thumb" style="cursor:default"><img src="${imgSrc(p)}" alt="Photo ${i + 1}"><span class="ix">${i + 1}</span></span>`).join('')}
+            <button class="add-tile" data-act="insCam" aria-label="Take a photo">${I.cam}</button><button class="add-tile" data-act="insPick" aria-label="Upload photos">${I.up}</button></div>
+          <label class="field">What should AI look at? <span class="hint" style="display:inline">Optional</span><textarea rows="3" data-on="insContext" placeholder="For example: is this PV distribution board terminated correctly?">${esc(ins.context)}</textarea></label>
+          <label class="field">Related audit <span class="hint" style="display:inline">Optional, adds the system details</span><select class="select" data-on="insJob"><option value="">None</option>${jobOpts}</select></label>
+          <div class="row"><button class="btn btn-accent" data-act="insRun" ${ins.photos.length && !ins.busy ? '' : 'disabled'}>${ins.busy ? '<span class="spin"></span>Checking photos' : I.ai + 'Check photos'}</button>${ins.photos.length || ins.result ? '<button class="btn btn-quiet" data-act="insClear">Start again</button>' : ''}</div>
+        </div>
       </div>
-      <div class="card pad">${ins.result ? critiqueHTML(ins.result) : '<div class="empty">The critique will appear here.</div>'}</div>
+      <div class="panel" aria-live="polite">
+        ${ins.result ? `<div class="panel-body">${critiqueHTML(ins.result)}</div>`
+          : ins.busy ? `<div class="loading"><span class="spin"></span>Checking photos</div>`
+          : `<div class="empty-state"><div class="empty-icon">${I.ai}</div><h3>Results appear here</h3><p>Add at least one photo, then choose Check photos.</p></div>`}
+      </div>
     </div>
-    ${S.critiques.length ? `<h2 style="margin-top:22px">Recent critiques</h2><div class="jobs">${S.critiques.map(c => `<div class="card job" data-act="showCritique" data-id="${c.id}"><div class="row"><b>${esc(c.result?.overall?.replace('_',' ') || '')}</b><div class="spacer"></div><span class="meta">${fmtDT(c.createdAt)}</span></div><div class="meta">${esc((c.result?.summary || '').slice(0,140))}</div>${c.jobNumber ? `<div class="meta">Job #${esc(c.jobNumber)}</div>` : ''}</div>`).join('')}</div>` : ''}`;
+    ${S.critiques.length ? `<div class="section-label" style="margin-top:40px"><h2>Recent checks</h2><span>Saved for everyone on the team</span></div>
+      <div class="history">${S.critiques.map(c => `<button class="panel" data-act="showCritique" data-id="${c.id}"><div class="row">${overallBadge(c.result?.overall)}<span class="grow"></span><span class="small muted">${fmtDT(c.createdAt)}</span></div><p class="small" style="margin-top:10px;color:var(--ink-2)">${esc((c.result?.summary || '').slice(0, 150))}</p>${c.jobNumber ? `<p class="small muted mono" style="margin-top:8px">${esc(c.jobNumber)}</p>` : ''}</button>`).join('')}</div>` : ''}`;
+}
+function overallBadge(o) {
+  const m = { good: ['o-pass', 'Good'], minor_concerns: ['o-pnc', 'Minor concerns'], non_compliant: ['o-policy', 'Non-compliant'], unsafe: ['o-safety', 'Unsafe'], unclear: ['o-none', 'Unclear'] }[o] || ['o-none', 'Unclear'];
+  return `<span class="badge ${m[0]}">${m[1]}</span>`;
 }
 function critiqueHTML(r) {
-  const cls = { good:'o-pass', minor_concerns:'o-pnc', non_compliant:'o-policy', unsafe:'o-safety', unclear:'o-none' }[r.overall] || 'o-none';
-  return `<div class="row"><span class="pill ${cls}" style="font-size:14px">${esc((r.overall||'').replace('_',' ').toUpperCase())}</span><span class="conf">${Math.round((r.confidence||0)*100)}% confidence</span></div>
-    ${r.whatItShows ? `<p class="sub" style="margin:8px 0 0">${esc(r.whatItShows)}</p>` : ''}
-    <p>${esc(r.summary)}</p>
-    ${(r.issues||[]).map(i => `<div class="issue sev-${esc(i.severity)}"><div>${i.code ? `<span class="code cat${CODE_MAP[i.code]?.cat}">${esc(i.code)}</span> ` : ''}<b>${esc(i.description)}</b>${i.recommendation ? `<div class="sub" style="margin:2px 0 0">Fix: ${esc(i.recommendation)}</div>` : ''}</div></div>`).join('')}
-    ${r.goodPractice?.length ? `<h3 style="margin-top:12px">Done well</h3><ul>${r.goodPractice.map(g => `<li>${esc(g)}</li>`).join('')}</ul>` : ''}
-    ${r.furtherEvidence?.length ? `<div class="guidance"><b>Further evidence:</b> ${r.furtherEvidence.map(esc).join(' · ')}</div>` : ''}
-    ${r.relatedChecks?.length ? `<p class="sub" style="margin-top:8px">Related checks: ${r.relatedChecks.filter(id=>QMAP[id]).map(id => '#' + QMAP[id].num + ' ' + esc(QMAP[id].text)).join('; ')}</p>` : ''}`;
+  return `<div class="verdict">${overallBadge(r.overall)}<span class="conf">${Math.round((r.confidence || 0) * 100)}% confident</span></div>
+    ${r.whatItShows ? `<p class="muted small" style="margin-top:12px">${esc(r.whatItShows)}</p>` : ''}
+    <p style="margin-top:8px;font-size:15.5px">${esc(r.summary || '')}</p>
+    ${(r.issues || []).length ? `<h3 style="margin-top:20px">Issues</h3>${r.issues.map(i => `<div class="finding sev-${esc(i.severity)}">${i.code ? `<span class="code cat${CODE_MAP[i.code]?.cat}">${esc(i.code)}</span>` : ''}<span class="txt"><b style="font-weight:550">${esc(i.description)}</b>${i.recommendation ? `<span class="muted small" style="display:block;margin-top:2px">Fix: ${esc(i.recommendation)}</span>` : ''}</span></div>`).join('')}` : ''}
+    ${r.goodPractice?.length ? `<h3 style="margin-top:20px">Done well</h3><ul class="list-plain">${r.goodPractice.map(g => `<li>${esc(g)}</li>`).join('')}</ul>` : ''}
+    ${r.furtherEvidence?.length ? `<div class="callout" style="margin-top:16px"><b>Photos that would settle any doubt:</b> ${r.furtherEvidence.map(esc).join('; ')}</div>` : ''}
+    ${r.relatedChecks?.filter(id => QMAP[id]).length ? `<p class="small muted" style="margin-top:14px">Related checklist items: ${r.relatedChecks.filter(id => QMAP[id]).map(id => QMAP[id].num + '. ' + esc(QMAP[id].text)).join('; ')}</p>` : ''}`;
 }
 async function insAddFiles(files) {
-  for (const f of files) { if (!f.type.startsWith('image/')) continue; try { const { img } = await readImage(f); S.ins.photos.push({ img, file:f }); } catch (e) { toast('Could not read ' + f.name, 'err'); } }
+  for (const f of files) {
+    if (S.ins.photos.length >= 8) { toast('Photo check takes up to 8 photos.'); break; }
+    if (!f.type.startsWith('image/')) continue;
+    try { const { img } = await readImage(f); S.ins.photos.push({ img }); } catch (e) { toast(`${f.name} could not be read.`, 'err'); }
+  }
   renderInspector();
 }
 async function insRun() {
-  const ins = S.ins; ins.busy = true; renderInspector();
+  const ins = S.ins; ins.busy = true; ins.result = null; renderInspector();
   const job = S.jobs.find(j => j.id === ins.jobId);
   try {
-    const r = parseJSON(await callAI(critiquePrompt(ins.context, job), ins.photos.slice(0, 8).map(p => p.img)));
+    const r = parseJSON(await callAI(critiquePrompt(ins.context, job), ins.photos.map(p => p.img)));
     r.issues = (r.issues || []).map(i => ({ ...i, code: matchCode(i.code) || i.code || null }));
     ins.result = r;
     try {
-      const imgs = ins.photos.slice(0, 3).map(p => p.img).filter((x, i, arr) => arr.slice(0, i + 1).join('').length < 750000);
+      let size = 0; const imgs = ins.photos.slice(0, 3).map(p => p.img).filter(x => (size += x.length) < 750000);
       const d = { result: clean(r), context: ins.context, jobId: ins.jobId || null, jobNumber: job?.jobNumber || null, images: imgs, createdAt: Date.now(), createdBy: auditorName(), model: S.settings.provider === 'claude' ? S.settings.claudeModel : S.settings.geminiModel };
-      const ref_ = await addDoc(collection(db, COL.critiques), d); S.critiques.unshift({ id: ref_.id, ...d }); S.critiques = S.critiques.slice(0, 12);
+      const rr = await addDoc(collection(db, COL.critiques), d); S.critiques.unshift({ id: rr.id, ...d }); S.critiques = S.critiques.slice(0, 12);
     } catch (e) { console.warn('critique save', e); }
-  } catch (e) { toast(aiErrorText(e), 'err', 7000); }
+  } catch (e) { toast(aiErrorText(e), 'err', 8000); }
   ins.busy = false; renderInspector();
 }
 async function loadCritiques() {
-  try { const s = await getDocs(query(collection(db, COL.critiques), orderBy('createdAt','desc'), limit(12))); S.critiques = s.docs.map(d => ({ id:d.id, ...d.data() })); } catch (e) { console.warn(e); }
+  try { const s = await getDocs(query(collection(db, COL.critiques), orderBy('createdAt', 'desc'), limit(12))); S.critiques = s.docs.map(d => ({ id: d.id, ...d.data() })); } catch (e) { console.warn(e); }
 }
 
 /* ═════════════ VIEW: SETTINGS ═════════════ */
 function renderSettings() {
   const st = S.settings;
   $('#view-settings').innerHTML = `
-    <h1>Settings</h1><p class="sub">Shared settings are saved to Firestore (<code>${COL.settings}</code>). Your name and any API key stay on this device.</p>
-    <div class="card pad" style="margin-bottom:14px"><h2>You</h2><div class="form">
-      <label class="f">Your name (shown on audits)<input id="setAuditor" value="${esc(lsGet('as_auditor'))}"></label>
-      <label class="f">Auto AI check after adding photos to a check<select id="setAutocheck"><option value="on">On</option><option value="off" ${lsGet('as_autocheck')==='off'?'selected':''}>Off</option></select></label>
-    </div></div>
-    <div class="card pad" style="margin-bottom:14px"><h2>AI</h2><div class="form">
-      <label class="f">AI provider<select id="setProvider"><option value="firebase">Gemini via Firebase AI Logic (uses your Firebase project)</option><option value="claude" ${st.provider==='claude'?'selected':''}>Claude via Anthropic API key</option></select></label>
-      <label class="f">Gemini model<input id="setGemini" value="${esc(st.geminiModel)}"><span class="hint">Any vision model your Firebase AI Logic project supports.</span></label>
-      <label class="f">Claude model<input id="setClaude" value="${esc(st.claudeModel)}"></label>
-      <label class="f">Anthropic API key (this device only)<input id="setClaudeKey" type="password" value="${esc(lsGet('as_claude_key'))}" placeholder="sk-ant-…"></label>
-      <label class="f">Auto-clear confidence threshold: <b id="thrVal">${Math.round(st.autoAccept*100)}%</b><input id="setThr" type="range" min="0.6" max="0.99" step="0.01" value="${st.autoAccept}" oninput="document.getElementById('thrVal').textContent=Math.round(this.value*100)+'%'"><span class="hint">AI "pass" results at or above this confidence are answered automatically. Everything else goes to an auditor. Higher = safer, more manual review.</span></label>
-      <label class="f">Max photos sent per check<input id="setMax" type="number" min="1" max="12" value="${st.maxPhotos}"></label>
-    </div><div class="row" style="margin-top:12px"><button class="btn ai-o" data-act="testAI">${I.ai} Test AI connection</button><span id="testRes" class="sub" style="margin:0"></span></div></div>
-    <div class="card pad" style="margin-bottom:14px"><h2>Reports</h2><div class="form">
-      <label class="f">Company name on reports<input id="setCompany" value="${esc(st.companyName)}"></label>
-      <label class="f">Default report email recipient<input id="setEmail" type="email" value="${esc(st.reportEmail)}"></label>
-    </div></div>
-    <div class="row"><button class="btn pri" data-act="saveSettings">Save settings</button></div>
-    <div class="card pad" style="margin-top:18px"><h2>Firebase setup checklist</h2>
-      <ol style="margin:0;padding-left:20px;font-size:14px">
-        <li><b>AI Logic:</b> Firebase console → Build → <i>AI Logic</i> → Get started → choose <i>Gemini Developer API</i> (free tier available).</li>
-        <li><b>Firestore rules</b> must allow read/write on <code>${COL.jobs}</code>, <code>${COL.photos}</code>, <code>${COL.critiques}</code> and <code>${COL.settings}</code>.</li>
-        <li><b>Storage rules</b> must allow writes under <code>${STORAGE_ROOT}/</code>. If Storage is blocked, photos are still kept as compressed copies in Firestore.</li>
-      </ol></div>`;
+    <div class="page-head"><div><h1>Settings</h1><p>Team settings are shared through Firebase. Your name and any API key stay on this device.</p></div></div>
+    <form class="panel panel-body" id="settingsForm" novalidate>
+      <div class="settings-grid"><div><h2>Your profile</h2><p>Recorded against every answer you set or confirm.</p></div><div class="form-grid">
+        <label class="field">Your name<input class="input" id="setAuditor" value="${esc(lsGet('as_auditor'))}" autocomplete="name"></label>
+        <label class="field">Review new photos automatically<select class="select" id="setAutocheck"><option value="on">Yes, run the AI review straight away</option><option value="off" ${lsGet('as_autocheck') === 'off' ? 'selected' : ''}>No, I'll start it myself</option></select></label>
+      </div></div>
+      <div class="settings-grid"><div><h2>AI review</h2><p>Which model reviews the photos, and how sure it must be before clearing a check without you.</p></div><div class="form-grid">
+        <label class="field">Provider<select class="select" id="setProvider"><option value="firebase">Gemini through Firebase AI Logic</option><option value="claude" ${st.provider === 'claude' ? 'selected' : ''}>Claude with an Anthropic API key</option></select></label>
+        <label class="field">Gemini model<input class="input" id="setGemini" value="${esc(st.geminiModel)}"><span class="hint">Any vision model your Firebase project supports.</span></label>
+        <label class="field">Claude model<input class="input" id="setClaude" value="${esc(st.claudeModel)}"></label>
+        <label class="field">Anthropic API key<input class="input" id="setClaudeKey" type="password" value="${esc(lsGet('as_claude_key'))}" placeholder="sk-ant-..." autocomplete="off"><span class="hint">Only needed for Claude. Stored on this device only.</span></label>
+        <label class="field full">Clear automatically at <b id="thrVal" style="color:var(--ink)">${Math.round(st.autoAccept * 100)}%</b> confidence or higher
+          <input class="range" id="setThr" type="range" min="0.6" max="0.99" step="0.01" value="${st.autoAccept}">
+          <span class="hint">Passes below this, and every defect or missing photo, go to an auditor. A higher setting is safer but means more manual review.</span></label>
+        <label class="field">Photos sent per check<input class="input" id="setMax" type="number" min="1" max="12" value="${st.maxPhotos}" inputmode="numeric"><span class="hint">The most recent photos are used. 1 to 12.</span></label>
+        <div class="field" style="justify-content:flex-end"><div class="row"><button type="button" class="btn" data-act="testAI">${I.ai}Test AI connection</button></div></div>
+        <div id="testRes" class="full" role="status"></div>
+      </div></div>
+      <div class="settings-grid"><div><h2>Reports</h2><p>Used on printed reports and emails.</p></div><div class="form-grid">
+        <label class="field">Company name<input class="input" id="setCompany" value="${esc(st.companyName)}" autocomplete="organization"></label>
+        <label class="field">Send reports to<input class="input" id="setEmail" type="email" value="${esc(st.reportEmail)}" placeholder="audits@yourcompany.co.uk" autocomplete="email"></label>
+      </div></div>
+      <div class="settings-grid"><div><h2>Firebase setup</h2><p>One-off steps for the pingu-solar project.</p></div><div>
+        <ol class="setup">
+          <li>Turn on AI: in the Firebase console, open Build, then AI Logic, choose Get started and pick the Gemini Developer API.</li>
+          <li>Allow Firestore reads and writes on <code>${COL.jobs}</code>, <code>${COL.photos}</code>, <code>${COL.critiques}</code> and <code>${COL.settings}</code>.</li>
+          <li>Allow Storage writes under <code>${STORAGE_ROOT}/</code>. If Storage is blocked, a compressed copy of each photo is still kept in Firestore.</li>
+        </ol></div></div>
+      <div class="row" style="justify-content:flex-end;border-top:1px solid var(--line);padding-top:20px"><button type="submit" class="btn btn-primary" id="saveSettingsBtn">Save settings</button></div>
+    </form>`;
+  $('#setThr').addEventListener('input', e => { $('#thrVal').textContent = Math.round(e.target.value * 100) + '%'; });
+  $('#settingsForm').addEventListener('submit', e => { e.preventDefault(); saveSettings(); });
 }
-async function saveSettings() {
-  lsSet('as_auditor', $('#setAuditor').value.trim()); lsSet('as_autocheck', $('#setAutocheck').value); lsSet('as_claude_key', $('#setClaudeKey').value.trim());
-  Object.assign(S.settings, { provider:$('#setProvider').value, geminiModel:$('#setGemini').value.trim() || DEFAULT_SETTINGS.geminiModel, claudeModel:$('#setClaude').value.trim() || DEFAULT_SETTINGS.claudeModel,
-    autoAccept:Number($('#setThr').value), maxPhotos:Math.max(1, Math.min(12, Number($('#setMax').value) || 6)), companyName:$('#setCompany').value.trim() || 'Automated Solar', reportEmail:$('#setEmail').value.trim() });
+async function saveSettings(silent = false) {
+  const name = $('#setAuditor').value.trim(); if (name) lsSet('as_auditor', name); setAvatar();
+  lsSet('as_autocheck', $('#setAutocheck').value); lsSet('as_claude_key', $('#setClaudeKey').value.trim());
+  Object.assign(S.settings, { provider: $('#setProvider').value, geminiModel: $('#setGemini').value.trim() || DEFAULT_SETTINGS.geminiModel, claudeModel: $('#setClaude').value.trim() || DEFAULT_SETTINGS.claudeModel,
+    autoAccept: Number($('#setThr').value), maxPhotos: Math.max(1, Math.min(12, Number($('#setMax').value) || 6)), companyName: $('#setCompany').value.trim() || 'Automated Solar', reportEmail: $('#setEmail').value.trim() });
   aiModelCache = null;
-  try { await setDoc(doc(db, COL.settings, 'config'), { ...S.settings, updatedAt:Date.now(), updatedBy:auditorName() }); toast('Settings saved', 'ok'); }
-  catch (e) { toast('Saved on this device, but Firestore failed: ' + (e.code || e.message), 'err'); }
+  const btn = $('#saveSettingsBtn'); if (btn && !silent) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Saving'; }
+  try { await setDoc(doc(db, COL.settings, 'config'), { ...S.settings, updatedAt: Date.now(), updatedBy: auditorName() }); if (!silent) toast('Settings saved', 'ok'); }
+  catch (e) { toast('Saved on this device only. Firebase rejected the change: ' + (e.code || e.message), 'err', 7000); }
+  if (btn) { btn.disabled = false; btn.textContent = 'Save settings'; }
 }
 
-/* ═════════════ NAV ═════════════ */
+/* ═════════════ NAVIGATION ═════════════ */
 function showView(v) {
   S.view = v;
-  ['dashboard','job','inspector','settings'].forEach(x => { $('#view-' + x).classList.toggle('hidden', x !== v); $('#nav-' + x)?.classList.toggle('on', x === v); });
-  $('#nav-job').classList.toggle('hidden', !S.job);
+  ['dashboard', 'job', 'inspector', 'settings'].forEach(x => {
+    $('#view-' + x).classList.toggle('hidden', x !== v);
+    const n = $('#nav-' + x); if (n) { if (x === v) n.setAttribute('aria-current', 'page'); else n.removeAttribute('aria-current'); }
+  });
+  const nj = $('#nav-job'); nj.classList.toggle('hidden', !S.job); if (S.job) nj.textContent = S.job.jobNumber;
   if (v === 'dashboard') renderDashboard();
   if (v === 'inspector') renderInspector();
   if (v === 'settings') renderSettings();
   window.scrollTo(0, 0);
+}
+function setAvatar() { const n = auditorName(); $('#avatar').textContent = initials(lsGet('as_auditor')); $('#avatar').parentElement.setAttribute('aria-label', `Signed in as ${n}. Change name`); }
+function nameDialog(first = false) {
+  openModal({ title: first ? 'Welcome to Automated Solar' : 'Your name', size: 'narrow',
+    body: `<p class="muted" style="margin-bottom:16px">${first ? 'Audit solar installations from pre-install to handover. ' : ''}Your name is recorded against every answer you set or confirm.</p><form id="nameForm"><label class="field">Your name<input class="input" id="nameInput" value="${esc(lsGet('as_auditor'))}" autocomplete="name" placeholder="e.g. Barry Dixon"></label></form>`,
+    foot: `${first ? '' : '<button class="btn" data-act="closeModal">Cancel</button>'}<button class="btn btn-primary" data-act="saveName">${first ? 'Get started' : 'Save'}</button>` });
+  $('#nameForm').addEventListener('submit', e => { e.preventDefault(); actions.saveName(); });
 }
 
 /* ═════════════ EVENTS ═════════════ */
@@ -1599,34 +1903,44 @@ const actions = {
   nav: el => { if (el.dataset.view === 'job' && !S.job) return; showView(el.dataset.view); if (el.dataset.view === 'job') renderJob(); },
   modalBg: (el, e) => { if (e.target === el) closeModal(); },
   closeModal: () => closeModal(),
-  newJob: () => openModal({ title:'New job', body: jobForm({ systemType:'PV + Battery' }), foot:`<button class="btn" data-act="closeModal">Cancel</button><button class="btn pri" data-act="createJob">Create &amp; start audit</button>` }),
+  confirmYes: () => { const r = S.confirmResolve; S.confirmResolve = null; closeModal(); r?.(true); },
+  confirmNo: () => { const r = S.confirmResolve; S.confirmResolve = null; closeModal(); r?.(false); },
+  changeName: () => nameDialog(false),
+  saveName: () => { const v = $('#nameInput').value.trim(); if (!v) { $('#nameInput').focus(); toast('Enter your name to continue.', 'err'); return; } lsSet('as_auditor', v); setAvatar(); closeModal(); toast(`Signed in as ${v}`, 'ok'); },
+  newJob: () => openModal({ title: 'New audit', body: jobForm({ systemType: 'PV + Battery' }), foot: `<button class="btn" data-act="closeModal">Cancel</button><button class="btn btn-primary" data-act="createJob">Create audit</button>` }),
   createJob: async (el) => {
-    const d = readJobForm(); if (!d.jobNumber) { toast('Job number is required', 'err'); return; }
-    if (S.jobs.some(j => String(j.jobNumber).toLowerCase() === d.jobNumber.toLowerCase()) && !confirm(`Job #${d.jobNumber} already exists. Create another?`)) return;
-    el.disabled = true;
-    try { const j = await createJob(d); closeModal(); if (!S.jobs.find(x => x.id === j.id)) S.jobs.unshift(j); S.stage = 'pre'; openJob(j.id); }
-    catch (e) { toast('Could not create job: ' + (e.code || e.message), 'err'); el.disabled = false; }
+    const d = readJobForm();
+    if (!d.jobNumber) { formError('Enter a job number.'); $('#jobForm [name=jobNumber]').focus(); return; }
+    if (!el.dataset.confirmed && S.jobs.some(j => String(j.jobNumber).toLowerCase() === d.jobNumber.toLowerCase())) {
+      formError(`An audit for job ${esc(d.jobNumber)} already exists. Choose Create anyway to add a second one.`); el.dataset.confirmed = '1'; el.textContent = 'Create anyway'; return;
+    }
+    el.disabled = true; el.innerHTML = '<span class="spin"></span>Creating';
+    try { const j = await createJob(d); closeModal(); if (!S.jobs.find(x => x.id === j.id)) S.jobs.unshift(j); S.job = null; openJob(j.id); toast(`Audit ${d.jobNumber} created`, 'ok'); }
+    catch (e) { formError('The audit could not be created: ' + esc(e.code || e.message)); el.disabled = false; el.textContent = 'Create audit'; }
   },
-  editJob: () => openModal({ title:'Edit job', body: jobForm(S.job), foot:`<button class="btn danger" data-act="deleteJob">Delete job</button><div class="spacer"></div><button class="btn" data-act="closeModal">Cancel</button><button class="btn pri" data-act="saveJobEdit">Save</button>` }),
-  saveJobEdit: () => { const d = readJobForm(); if (!d.jobNumber) { toast('Job number is required', 'err'); return; } Object.assign(S.job, d); markDirty(); closeModal(); renderJob(); },
+  editJob: () => openModal({ title: 'Edit details', body: jobForm(S.job), foot: `<button class="btn btn-danger" data-act="deleteJob">${I.trash}Delete audit</button><span class="grow"></span><button class="btn" data-act="closeModal">Cancel</button><button class="btn btn-primary" data-act="saveJobEdit">Save changes</button>` }),
+  saveJobEdit: () => { const d = readJobForm(); if (!d.jobNumber) { formError('Enter a job number.'); return; } Object.assign(S.job, d); markDirty(); closeModal(); renderJob(); toast('Changes saved', 'ok'); },
   deleteJob: async () => {
-    if (!confirm(`Delete job #${S.job.jobNumber} and its ${S.photos.length} photos? This cannot be undone.`)) return;
-    try { for (const p of [...S.photos]) await deletePhoto(p); await deleteDoc(doc(db, COL.jobs, S.job.id)); S.job = null; closeModal(); showView('dashboard'); toast('Job deleted'); }
-    catch (e) { toast('Delete failed: ' + (e.code || e.message), 'err'); }
+    const j = S.job;
+    if (!await confirmDialog({ title: `Delete audit ${esc(j.jobNumber)}?`, text: `This removes the audit and its ${S.photos.length} photo${S.photos.length === 1 ? '' : 's'} for everyone. It can't be undone.`, confirmLabel: 'Delete audit', danger: true })) return;
+    try { for (const p of [...S.photos]) await deletePhoto(p); await deleteDoc(doc(db, COL.jobs, j.id)); S.job = null; showView('dashboard'); toast(`Audit ${j.jobNumber} deleted`, 'ok'); }
+    catch (e) { toast('The audit could not be deleted: ' + (e.code || e.message), 'err'); }
   },
-  openJob: el => openJob(el.dataset.id),
-  stage: el => { S.stage = el.dataset.stage; S.filter = 'all'; updateJobHeader(); renderQuestions(); },
+  clearFilters: () => { S.jobSearch = ''; S.jobStatus = ''; S.jobOutcome = ''; renderDashboard(); },
+  openJob: el => openJob(el.dataset.id, el.dataset.filter || 'all'),
+  stage: el => { S.stage = el.dataset.stage; updateJobHeader(); renderQuestions(); },
   filter: el => { S.filter = el.dataset.f; updateJobHeader(); renderQuestions(); },
+  reviewNow: () => { S.filter = 'needs'; const first = STAGES.find(s => visibleQs(S.job, s.id).some(q => reviewState(q) === 'needs')); if (first) S.stage = first.id; updateJobHeader(); renderQuestions(); $('#stepper').scrollIntoView({ behavior: 'smooth', block: 'start' }); },
   answer: el => setAnswer(el.dataset.q, el.dataset.v),
-  pick: el => { S.pickTarget = { type:'job', q:el.dataset.q }; $('#pickFiles').click(); },
-  camera: el => { S.pickTarget = { type:'job', q:el.dataset.q }; openCamera(); },
+  pick: el => { S.pickTarget = { type: 'job', q: el.dataset.q }; $('#pickFiles').click(); },
+  camera: el => { S.pickTarget = { type: 'job', q: el.dataset.q }; openCamera(); },
   aiCheck: el => aiCheckQuestion(el.dataset.q).then(() => updateJobHeader()).catch(() => {}),
   acceptAi: el => {
     const q = QMAP[el.dataset.q], a = ans(q.id), ai = a.ai;
     if (ai.recommendedAnswer) a.answer = ai.recommendedAnswer;
-    a.codes = a.answer === q.triggers ? [...new Set([...(a.codes||[]), ...ai.issues.map(i => i.code).filter(Boolean)])] : [];
+    a.codes = a.answer === q.triggers ? [...new Set([...(a.codes || []), ...ai.issues.map(i => i.code).filter(Boolean)])] : [];
     a.review = 'human'; a.by = auditorName(); a.at = Date.now();
-    markDirty(q.id); refreshCard(q.id); updateJobHeader();
+    markDirty(q.id); refreshCard(q.id); updateJobHeader(); toast(`Check ${q.num} updated from the AI finding`, 'ok');
   },
   applyCode: el => {
     const q = QMAP[el.dataset.q], a = ans(q.id);
@@ -1635,47 +1949,47 @@ const actions = {
     a.review = 'human'; a.by = auditorName(); a.at = Date.now();
     markDirty(q.id); refreshCard(q.id); updateJobHeader();
   },
-  verify: el => { const a = ans(el.dataset.q); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); refreshCard(el.dataset.q); updateJobHeader(); },
+  verify: el => { const a = ans(el.dataset.q); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); refreshCard(el.dataset.q); updateJobHeader(); if (S.filter === 'needs') renderQuestions(); },
   viewPhoto: el => viewPhoto(el.dataset.id),
   viewUnsorted: () => viewUnsorted(),
-  untag: async el => { const p = S.photos.find(x => x.id === el.dataset.id); p.qIds = (p.qIds||[]).filter(x => x !== el.dataset.q); await updatePhotoTags(p); refreshCard(el.dataset.q); viewPhoto(p.id); },
+  untag: async el => { const p = S.photos.find(x => x.id === el.dataset.id); p.qIds = (p.qIds || []).filter(x => x !== el.dataset.q); await updatePhotoTags(p); refreshCard(el.dataset.q); updateJobHeader(); viewPhoto(p.id); },
   delPhoto: async el => {
-    const p = S.photos.find(x => x.id === el.dataset.id); if (!p || !confirm('Delete this photo?')) return;
-    try { await deletePhoto(p); closeModal(); (p.qIds||[]).forEach(refreshCard); renderJob(); toast('Photo deleted'); } catch (e) { toast('Delete failed: ' + (e.code||e.message), 'err'); }
+    const p = S.photos.find(x => x.id === el.dataset.id); if (!p) return;
+    if (!await confirmDialog({ title: 'Delete this photo?', text: 'It will be removed from every check it is evidence for.', confirmLabel: 'Delete photo', danger: true })) { viewPhoto(p.id); return; }
+    try { await deletePhoto(p); renderJob(); toast('Photo deleted', 'ok'); } catch (e) { toast('The photo could not be deleted: ' + (e.code || e.message), 'err'); }
   },
   bulkUpload: () => bulkUploadModal(),
-  bulkPick: () => { S.pickTarget = { type:'bulk' }; $('#pickFiles').click(); },
+  bulkPick: () => { S.pickTarget = { type: 'bulk' }; $('#pickFiles').click(); },
   runAll: el => {
     const scope = el.dataset.scope;
-    const qids = visibleQs(S.job, scope === 'stage' ? S.stage : null).filter(q => peek(S.job,q.id)?.review !== 'human').map(q => q.id);
-    if (!qids.length) { toast('Every check in scope is already auditor-verified.'); return; }
-    openProgress(scope === 'stage' ? `AI check – ${STAGES.find(s=>s.id===S.stage).label}` : 'AI check – whole job');
-    runChecks(qids, 'Evidence check');
+    const qids = visibleQs(S.job, scope === 'stage' ? S.stage : null).filter(q => peek(S.job, q.id)?.review !== 'human').map(q => q.id);
+    if (!qids.length) { toast('Every check here has already been verified by an auditor.'); return; }
+    openProgress(scope === 'stage' ? `AI review: ${STAGES.find(s => s.id === S.stage).label.toLowerCase()}` : 'AI review: all checks');
+    runChecks(qids, 'AI review');
   },
-  cancelProg: () => { S.cancel = true; plog('Stopping after current item…'); },
+  cancelProg: () => { S.cancel = true; plog('Stopping', 'Finishing the checks already in progress', 'warn'); },
   report: () => openReport(),
   aiWriteup: el => aiWriteup(el),
   printReport: () => printReport(),
   emailReport: () => emailReport(),
-  completeAudit: () => {
-    const sum = summarise(S.job);
-    if ((sum.needsReview || sum.totalQ - sum.answeredQ) && !confirm(`${sum.totalQ - sum.answeredQ} unanswered and ${sum.needsReview} awaiting review. Complete the audit anyway?`)) return;
-    S.job.status = 'Complete'; S.job.completedAt = Date.now(); S.job.completedBy = auditorName(); markDirty(); updateJobHeader(); toast('Audit marked complete', 'ok');
+  completeAudit: async () => {
+    const sum = summarise(S.job), un = sum.totalQ - sum.answeredQ;
+    if ((sum.needsReview || un) && !await confirmDialog({ title: 'Complete with checks outstanding?', text: `${un} check${un === 1 ? ' is' : 's are'} unanswered and ${sum.needsReview} ${sum.needsReview === 1 ? 'is' : 'are'} waiting for review. The report will show these as incomplete.`, confirmLabel: 'Complete audit' })) return;
+    S.job.status = 'Complete'; S.job.completedAt = Date.now(); S.job.completedBy = auditorName(); markDirty(); updateJobHeader(); toast(`Audit ${S.job.jobNumber} completed`, 'ok');
   },
-  reopen: () => { S.job.status = 'In progress'; markDirty(); updateJobHeader(); },
+  reopen: () => { S.job.status = 'In progress'; markDirty(); updateJobHeader(); toast('Audit reopened'); },
   camShoot: () => camShoot(),
   camSwitch: () => { S.cam.facing = S.cam.facing === 'environment' ? 'user' : 'environment'; startCam(); },
   camDone: () => { const shots = S.cam?.shots || []; closeModal(); if (shots.length) routeFiles(shots); },
-  insPick: () => { S.pickTarget = { type:'ins' }; $('#pickFiles').click(); },
-  insCam: () => { S.pickTarget = { type:'ins' }; openCamera(); },
+  insPick: () => { S.pickTarget = { type: 'ins' }; $('#pickFiles').click(); },
+  insCam: () => { S.pickTarget = { type: 'ins' }; openCamera(); },
   insRun: () => insRun(),
-  insClear: () => { S.ins = { photos:[], result:null, context:'', jobId:S.ins.jobId }; renderInspector(); },
-  showCritique: el => { const c = S.critiques.find(x => x.id === el.dataset.id); if (!c) return; openModal({ title:'Critique', wide:true, body:`${(c.images||[]).length ? `<div class="photos" style="margin-bottom:10px">${c.images.map(i => `<div class="thumb" style="width:110px;height:110px"><img src="data:image/jpeg;base64,${i}"></div>`).join('')}</div>` : ''}${c.context ? `<p class="sub">Focus: ${esc(c.context)}</p>` : ''}${critiqueHTML(c.result || {})}` }); },
-  saveSettings: () => saveSettings(),
+  insClear: () => { S.ins = { photos: [], result: null, context: '', jobId: S.ins.jobId }; renderInspector(); },
+  showCritique: el => { const c = S.critiques.find(x => x.id === el.dataset.id); if (!c) return; openModal({ title: 'Photo check', size: 'wide', body: `${(c.images || []).length ? `<div class="evidence" style="margin:0 0 16px">${c.images.map((i, k) => `<span class="thumb" style="width:112px;height:112px;cursor:default"><img src="data:image/jpeg;base64,${i}" alt="Photo ${k + 1}"></span>`).join('')}</div>` : ''}${c.context ? `<p class="muted small" style="margin-bottom:12px">Asked: ${esc(c.context)}</p>` : ''}${critiqueHTML(c.result || {})}` }); },
   testAI: async () => {
-    await saveSettings(); const out = $('#testRes'); out.innerHTML = '<span class="spin"></span> Testing…';
-    try { const r = parseJSON(await callAI('Reply with JSON {"ok": true, "model": "<your model name>"}')); out.textContent = r.ok ? '✓ AI is working' : 'Unexpected reply'; out.style.color = 'var(--ok)'; }
-    catch (e) { out.textContent = aiErrorText(e); out.style.color = 'var(--safety)'; }
+    await saveSettings(true); const out = $('#testRes'); out.innerHTML = `<div class="row muted small"><span class="spin"></span>Contacting the AI model</div>`;
+    try { const r = parseJSON(await callAI('Reply with JSON {"ok": true}')); out.innerHTML = r.ok ? `<div class="alert info" style="margin:0;background:var(--pass-soft);border-color:#BFE5D3;color:#0A5A3F">${I.check}<span>The AI is connected and responding.</span></div>` : `<div class="alert" style="margin:0">${I.alert}<span>The AI replied, but not in the expected format.</span></div>`; }
+    catch (e) { out.innerHTML = `<div class="alert" style="margin:0">${I.alert}<span>${esc(aiErrorText(e))}</span></div>`; }
   }
 };
 function routeFiles(files) {
@@ -1685,37 +1999,44 @@ function routeFiles(files) {
   else if (t.type === 'job') handleFiles(files, t.q);
 }
 document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const fn = actions[el.dataset.act]; if (fn) fn(el, e); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#modalRoot').innerHTML) { closeModal(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[data-act][tabindex]')) { e.preventDefault(); e.target.click(); }
+  if (e.key === 'Tab' && $('#modalRoot').innerHTML) {
+    const f = [...$('#modalRoot').querySelectorAll('button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null);
+    if (!f.length) return; const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
 
 let notesTimer = {}, searchTimer;
 document.addEventListener('input', e => {
   const el = e.target, on = el.dataset?.on; if (!on) return;
   if (on === 'notes') { const a = ans(el.dataset.q); a.notes = el.value; clearTimeout(notesTimer[el.dataset.q]); notesTimer[el.dataset.q] = setTimeout(() => markDirty(el.dataset.q), 400); el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
-  if (on === 'jobSearch') { S.jobSearch = el.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { renderDashboard(); const i = document.querySelector('[data-on="jobSearch"]'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); }
+  if (on === 'jobSearch') { S.jobSearch = el.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { renderDashboard(); const i = document.querySelector('[data-on="jobSearch"]'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250); }
   if (on === 'insContext') S.ins.context = el.value;
 });
 document.addEventListener('change', async e => {
   const el = e.target, on = el.dataset?.on; if (!on) return;
   if (on === 'selAnswer') setAnswer(el.dataset.q, el.value || ans(el.dataset.q).answer);
-  if (on === 'code') { const a = ans(el.dataset.q); a.codes = el.checked ? [...new Set([...a.codes, el.value])] : a.codes.filter(c => c !== el.value); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); updateJobHeader(); }
-  if (on === 'addCode' && el.value) { const a = ans(el.dataset.q); if (!a.codes.includes(el.value)) a.codes.push(el.value); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); refreshCard(el.dataset.q); updateJobHeader(); }
+  if (on === 'code') { const a = ans(el.dataset.q); a.codes = el.checked ? [...new Set([...a.codes, el.value])] : a.codes.filter(c => c !== el.value); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); updateJobHeader(); const card = $('#qc_' + el.dataset.q); const sum = card?.querySelector('details.codes>summary'); if (sum) { refreshCard(el.dataset.q); $('#qc_' + el.dataset.q + ' details.codes')?.setAttribute('open', ''); $(`#qc_${el.dataset.q} input[value="${CSS.escape(el.value)}"]`)?.focus(); } }
+  if (on === 'addCode' && el.value) { const a = ans(el.dataset.q); if (!a.codes.includes(el.value)) a.codes.push(el.value); a.review = 'human'; a.by = auditorName(); a.at = Date.now(); markDirty(el.dataset.q); refreshCard(el.dataset.q); $('#qc_' + el.dataset.q + ' details.codes')?.setAttribute('open', ''); updateJobHeader(); }
   if (on === 'jobStatus') { S.jobStatus = el.value; renderDashboard(); }
   if (on === 'jobOutcome') { S.jobOutcome = el.value; renderDashboard(); }
   if (on === 'insJob') S.ins.jobId = el.value || null;
-  if (on === 'tagPhoto' && el.value) { const p = S.photos.find(x => x.id === el.dataset.id); p.qIds = [...new Set([...(p.qIds||[]), el.value])]; await updatePhotoTags(p); refreshCard(el.value); renderJob(); viewPhoto(p.id); toast('Photo assigned to #' + QMAP[el.value].num); }
+  if (on === 'tagPhoto' && el.value) { const p = S.photos.find(x => x.id === el.dataset.id); p.qIds = [...new Set([...(p.qIds || []), el.value])]; await updatePhotoTags(p); renderJob(); viewPhoto(p.id); toast(`Photo assigned to check ${QMAP[el.value].num}`, 'ok'); }
 });
-['pickFiles','pickCamera'].forEach(id => $('#' + id).addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) routeFiles(files); }));
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modalRoot').innerHTML) closeModal(); });
+['pickFiles', 'pickCamera'].forEach(id => $('#' + id).addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) routeFiles(files); }));
 window.addEventListener('beforeunload', e => { if (S.dirty.size || S.dirtyMeta) { saveJob(); e.preventDefault(); } });
 
-
-/* ═════════════ BOOT ═════════════ */
+/* ═════════════ START ═════════════ */
 (async function boot() {
-  if (!lsGet('as_auditor')) { const n = prompt('Your name (shown on audits):', ''); if (n) lsSet('as_auditor', n.trim()); }
-  await loadSettings();
+  setAvatar();
   showView('dashboard');
-  $('#view-dashboard').innerHTML = '<div class="empty"><span class="spin"></span> Loading jobs…</div>';
+  await loadSettings();
   listenJobs();
   loadCritiques();
+  if (!lsGet('as_auditor')) nameDialog(true);
 })();
 </script>
 </body>
